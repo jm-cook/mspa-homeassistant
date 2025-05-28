@@ -115,7 +115,7 @@ def send_device_command(desired_dict, retry=False, bubble_level=-1):
 
     if (desired_dict.get("heater_state")) == 0:
         set_filter_state(0)
-    return True if response.get('message') == "SUCCESS" else False
+    return response
 
 def set_heater_state(state: int): return send_device_command({"heater_state": state})
 def set_temperature_setting(temp: int): return send_device_command({"temperature_setting": temp})
