@@ -1,0 +1,42 @@
+set_temperature:
+  name: Set Temperature
+  description: Set the target temperature of the hot tub.
+  fields:
+    temperature:
+      name: Temperature
+      description: Target temperature in Celsius
+      required: true
+      selector:
+        number:
+          min: 20
+          max: 40
+          step: 1
+          unit_of_measurement: °C
+
+set_heater:
+  name: Set Heater
+  description: Turn the heater on or off
+  fields:
+    state:
+      name: State
+      description: "on" or "off"
+      required: true
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
+
+set_bubble:
+  name: Set Bubble
+  description: Turn the bubble feature on or off
+  fields:
+    state:
+      name: State
+      description: "on" or "off"
+      required: true
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
