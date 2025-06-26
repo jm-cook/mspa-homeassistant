@@ -1,0 +1,3 @@
+service: appdaemon.mspa/heater
+data:
+  state: "on"

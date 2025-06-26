@@ -5,19 +5,27 @@ import string
 import requests
 import json
 import sys
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Relevant ids and secrets:
 # The App ID is sent in each HTTP request header from the Mspa app.
-app_id = ""
+app_id = "e1c8e068f9ca11eba4dc0242ac120002"
 # The App Secret can be determined by decompiling the Mspa app.
-app_secret = ""
-# Account E-Mail
-account_email = ""
-# MD5 hash of the actual password
-password = ""
-# The Device ID and Product ID is sent in each HTTP request header from the Mspa app.
-device_id = ""
-product_id = ""
+app_secret = "87025c9ecd18906d27225fe79cb68349"
+# Load sensitive configuration from .env file
+account_email = os.getenv('ACCOUNT_EMAIL')
+password = os.getenv('PASSWORD')
+device_id = os.getenv('DEVICE_ID')
+product_id = os.getenv('PRODUCT_ID')
+
+# Validate that required environment variables are set
+if not all([account_email, password, device_id, product_id]):
+    raise ValueError("Missing required environment variables. Please check your .env file.")
+
 
 def generate_nonce(length=32):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
@@ -31,13 +39,13 @@ def build_signature(app_id, nonce, ts, app_secret):
 
 def get_former_token():
     try:
-        with open("token.txt", "r") as file:
+        with open("../../token.txt", "r") as file:
             return file.read().strip()
     except FileNotFoundError:
         return ""
 
 def write_token(token):
-    with open("token.txt", "w") as file:
+    with open("../../token.txt", "w") as file:
         file.write(token)
 
 def authenticate():
@@ -118,11 +126,12 @@ def send_device_command(desired_dict, retry=False, bubble_level=-1):
     return response
 
 def set_heater_state(state: int): return send_device_command({"heater_state": state})
-def set_temperature_setting(temp: int): return send_device_command({"temperature_setting": temp})
 def set_bubble_state(state: int, level: int): return send_device_command({"bubble_state": state, "bubble_level": level})
 def set_bubble_level(level: int): return send_device_command({"bubble_level": level})
 def set_jet_state(state: int): return send_device_command({"jet_state": state})
 def set_filter_state(state: int): return send_device_command({"filter_state": state})
+
+def set_temperature_setting(temp: int): return send_device_command({"temperature_setting": temp})
 
 def getHotTubStatus(retry=False):
     nonce = generate_nonce()
@@ -192,3 +201,4 @@ if __name__ == "__main__":
 
     else:
         print("Unknown command.")
+    exit(0)
