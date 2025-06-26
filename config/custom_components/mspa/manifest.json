@@ -1,0 +1,10 @@
+{
+    "domain": "mspa",
+    "name": "MSpa Hot Tub",
+    "documentation": "https://github.com/yourusername/mspa",
+    "dependencies": [],
+    "codeowners": [],
+    "requirements": ["python-dotenv"],
+    "iot_class": "local_polling",
+    "version": "1.0.0"
+}
