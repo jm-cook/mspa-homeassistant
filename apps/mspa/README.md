@@ -24,7 +24,12 @@ This AppDaemon app provides integration between Home Assistant and MSpa hot tubs
      script_path: /path/to/your/hot_tub.py
    ```
 
-   Replace `/path/to/your/hot_tub.py` with the actual path to your `hot_tub.py` script.
+   Replace `/path/to/your/hot_tub.py` with the actual path to your `hot_tub.py` script. An example would be:
+   ```yaml
+   mspa_hot_tub:
+     module: mspa
+     class: MSpaHotTub
+     script_path: /homeassistant/appdaemon/apps/mspa/hot_tub.py   
 
 
 # MSPA Hot Tub Control for AppDaemon
