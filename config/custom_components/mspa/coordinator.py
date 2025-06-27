@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for MSpa integration."""
 import logging
 from datetime import timedelta
-import subprocess
-import json
-import asyncio
+from .mspa_api import MSpaApiClient
+
 from typing import Any, Dict
 
 from homeassistant.core import HomeAssistant
@@ -21,58 +20,39 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+from typing import Any, Dict
 class MSpaUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from MSpa Hot Tub."""
 
-    def __init__(self, hass: HomeAssistant, script_path: str, config: Dict[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: Dict[str, Any]) -> None:
         """Initialize."""
+        _LOGGER.debug(f"MSpaUpdateCoordinator initializing {config_entry.data}")
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
-        self.script_path = script_path
-        self.config = config
+        self.config = config_entry.data
+        self.account_email = self.config["account_email"]
+        self.password = self.config["password"]  # Already MD5 hashed
+        self.device_id = self.config["device_id"]
+        self.product_id = self.config["product_id"]
         self._last_data = {}
-
-    async def _async_run_script(self, command: str, extra_args: list = None) -> Dict[str, Any]:
-        """Run the hot_tub.py script with given command."""
-        try:
-            cmd = [self.script_path, command]
-            if extra_args:
-                cmd.extend(extra_args)
-
-            _LOGGER.debug("Running command: %s", " ".join(cmd))
-
-            process = await self.hass.async_add_executor_job(
-                subprocess.run,
-                cmd,
-                capture_output=True,
-                text=True,
-                check=True
-            )
-
-            try:
-                return json.loads(process.stdout)
-            except json.JSONDecodeError as err:
-                _LOGGER.error("Failed to parse script output: %s", process.stdout)
-                raise UpdateFailed(f"Invalid JSON response from script: {err}")
-
-        except subprocess.CalledProcessError as err:
-            _LOGGER.error("Script execution failed: %s", err.stderr)
-            raise UpdateFailed(f"Script execution failed: {err.stderr}")
-        except Exception as err:
-            _LOGGER.error("Unexpected error running script: %s", str(err))
-            raise UpdateFailed(f"Unexpected error: {str(err)}")
+        self.api = MSpaApiClient(
+            account_email=self.account_email,
+            password=self.password,
+            device_id=self.device_id,
+            product_id=self.product_id
+        )
 
     async def _async_update_data(self) -> Dict[str, Any]:
-        """Update data via script."""
+        """Update data via direct function call."""
         try:
-            # Get the current status from the hot tub
-            status_data = await self._async_run_script("status")
+            # Directly call the hot_tub status function
+            status_data = await self.hass.async_add_executor_job(self.api.get_hot_tub_status)
 
-            # Transform the data into our expected format
             transformed_data = {
                 "temperature": float(status_data.get("water_temp", 0)),
                 "target_temp": float(status_data.get("target_temp", 0)),
@@ -83,6 +63,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             }
 
             self._last_data = transformed_data
+            _LOGGER.debug("Fetched MSpa data: %s", transformed_data)
             return transformed_data
 
         except Exception as err:
@@ -92,7 +73,8 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
     async def set_temperature(self, temperature: float) -> None:
         """Set the target temperature."""
         try:
-            await self._async_run_script("set_temperature", [str(temperature)])
+            _LOGGER.debug("Setting temperature to %s", temperature)
+            await self.hass.async_add_executor_job(self.api.set_temperature_setting, temperature)
             await self.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set temperature: %s", str(err))
@@ -101,7 +83,12 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
     async def set_feature(self, feature: str, state: str) -> None:
         """Set a feature state (heater, filter, bubble, jet)."""
         try:
-            await self._async_run_script(f"set_{feature}", [state])
+            _LOGGER.debug("Setting %s to %s", feature, state)
+            # func = getattr(hot_tub, f"set_{feature}", None)
+            func = None
+            if func is None:
+                raise AttributeError(f"No function set_{feature} in hot_tub.py")
+            await self.hass.async_add_executor_job(func, state)
             await self.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set %s to %s: %s", feature, state, str(err))
@@ -110,6 +97,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
     async def handle_service(self, service: str, data: Dict[str, Any]) -> None:
         """Handle services calls."""
         try:
+            _LOGGER.debug("Handling service call: %s, %s", service, data)
             if service == "set_temperature":
                 await self.set_temperature(float(data[ATTR_TEMPERATURE]))
             elif service in ["set_heater", "set_filter", "set_bubble", "set_jet"]:
@@ -119,9 +107,18 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.error("Unknown service: %s", service)
                 raise ValueError(f"Unknown service: {service}")
 
-            # Request a refresh to update the states
             await self.async_request_refresh()
 
         except Exception as err:
             _LOGGER.error("Service call failed: %s", str(err))
             raise
+
+
+    def set_debug(self, enable: bool) -> None:
+        """Enable or disable debug logging for this integration."""
+        if enable:
+            _LOGGER.setLevel(logging.DEBUG)
+            _LOGGER.debug("Debug logging enabled for MSpa integration.")
+        else:
+            _LOGGER.setLevel(logging.INFO)
+            _LOGGER.info("Debug logging disabled for MSpa integration.")
