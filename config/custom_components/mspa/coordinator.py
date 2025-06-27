@@ -54,16 +54,17 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             status_data = await self.hass.async_add_executor_job(self.api.get_hot_tub_status)
 
             transformed_data = {
-                "temperature": float(status_data.get("water_temp", 0)),
-                "target_temp": float(status_data.get("target_temp", 0)),
-                "heater": status_data.get("heater", "off") == "on",
-                "filter": status_data.get("filter", "off") == "on",
-                "bubble": status_data.get("bubble", "off") == "on",
-                "jet": status_data.get("jet", "off") == "on",
+                "water_temperature": float(status_data.get("water_temperature", 0))/2,
+                "target_temperature": float(status_data.get("temperature_setting", 0))/2,
+                "heater": "on" if status_data.get("heater_state", 0) else "off",
+                "filter": "on" if status_data.get("filter_state", 0) else "off",
+                "bubble": "on" if status_data.get("bubble_state", 0) else "off",
+                "jet": "on" if status_data.get("jet_state", 0) else "off"
             }
 
             self._last_data = transformed_data
-            _LOGGER.debug("Fetched MSpa data: %s", transformed_data)
+            _LOGGER.debug("Fetched MSpa status_data: %s", status_data)
+            _LOGGER.debug("Fetched MSpa transformed data: %s", transformed_data)
             return transformed_data
 
         except Exception as err:

@@ -6,7 +6,9 @@ import requests
 import json
 import sys
 import os
+import logging
 
+_LOGGER = logging.getLogger(__name__)
 
 # Relevant ids and secrets:
 # The App ID is sent in each HTTP request header from the Mspa app.
@@ -170,4 +172,5 @@ class MSpaApiClient:
             self.write_token(token)
             return self.get_hot_tub_status(True)
         data = response["data"]
+        _LOGGER.debug("get_hot_tub_status %s", data)
         return data

@@ -3,7 +3,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import MSpaUpdateCoordinator
-
+from homeassistant.const import (
+    Platform,
+)
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -17,6 +19,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
+    _LOGGER.debug("MSpa integration %s setup %s %s", Platform.SENSOR, entry.title, entry.entry_id)
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
     _LOGGER.debug("MSpa coordinator set up and initial data fetched")
     return True
 

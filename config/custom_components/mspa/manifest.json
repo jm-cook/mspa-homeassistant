@@ -1,5 +1,6 @@
 {
     "domain": "mspa",
+    "integration_type": "device",
     "name": "MSpa Hot Tub",
     "config_flow": true,
     "loggers": ["custom_components.mspa"],
