@@ -1,6 +1,6 @@
 """Constants for the MSpa Hot Tub integration."""
 from homeassistant.const import (
-    TEMP_CELSIUS,
+    UnitOfTemperature,
     CONF_EMAIL,
     CONF_PASSWORD,
     CONF_DEVICE_ID,
@@ -22,3 +22,5 @@ SERVICE_SET_FILTER = "set_filter"
 # Attributes
 ATTR_TEMPERATURE = "temperature"
 ATTR_STATE = "state"
+
+TEMP_UNIT = UnitOfTemperature.CELSIUS
