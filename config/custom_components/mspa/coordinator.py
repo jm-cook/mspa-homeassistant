@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for MSpa integration."""
 import logging
+import asyncio
 from datetime import timedelta
 from .mspa_api import MSpaApiClient
 
@@ -59,7 +60,9 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
                 "heater": "on" if status_data.get("heater_state", 0) else "off",
                 "filter": "on" if status_data.get("filter_state", 0) else "off",
                 "bubble": "on" if status_data.get("bubble_state", 0) else "off",
-                "jet": "on" if status_data.get("jet_state", 0) else "off"
+                "jet": "on" if status_data.get("jet_state", 0) else "off",
+                "ozone": "on" if status_data.get("ozone_state", 0) else "off",
+                "uvc": "on" if status_data.get("uvc_state", 0) else "off"
             }
 
             self._last_data = transformed_data
@@ -100,9 +103,14 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
                 await self.hass.async_add_executor_job(self.api.set_bubble_state, numerical_state)
             elif feature == "jet":
                 await self.hass.async_add_executor_job(self.api.set_jet_state, numerical_state)
+            elif feature == "ozone":
+                await self.hass.async_add_executor_job(self.api.set_ozone_state, numerical_state)
+            elif feature == "uvc":
+                await self.hass.async_add_executor_job(self.api.set_uvc_state, numerical_state)
             else:
                 raise ValueError(f"Unknown feature: {feature}")
 
+            await asyncio.sleep(10)  # Wait 10 seconds before refreshing
             await self.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set %s to %s: %s", feature, state, str(err))
