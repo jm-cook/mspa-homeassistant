@@ -9,6 +9,6 @@
     "dependencies": [],
     "requirements": ["python-dotenv"],
     "iot_class": "local_polling",
-    "platforms": ["switch"],
+    "platforms": ["switch", "sensor", "climate"],
     "version": "1.0.0"
 }
