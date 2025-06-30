@@ -142,6 +142,12 @@ class MSpaApiClient:
     def set_filter_state(self, state: int):
         return self.send_device_command({"filter_state": state})
 
+    def set_ozone_state(self, state: int):
+        return self.send_device_command({"ozone_state": state})
+
+    def set_uvc_state(self, state: int):
+        return self.send_device_command({"uvc_state": state})
+
     def set_temperature_setting(self, temp: int):
         return self.send_device_command({"temperature_setting": temp*2})
 
