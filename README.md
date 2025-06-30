@@ -21,7 +21,8 @@ Refer to the installation and configuration instructions below to get started.
     - In Home Assistant, go to **HACS**.
     - Click the three dots in the top right and select **Custom repositories**.
     - Enter the URL of this repository and select **Integration** as the category.
-    - Click **Add**.
+    - Click **Download**.
+    - Now restart homeassistant to load the new integration.
 
 2. **Install the Integration:**
     - After adding the repository, search for the custom component in HACS.
@@ -59,6 +60,7 @@ create a guest account on the MSPA Link app to avoid using your main account cre
    - `password`: The MSPA account password for the guest user.
 5. Click **Submit** to complete the configuration.
 
+![img.png](img/img.png)
 
 ## Troubleshooting
 
