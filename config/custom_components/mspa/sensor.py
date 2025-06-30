@@ -3,6 +3,7 @@ import logging
 from homeassistant.components.sensor import SensorEntity, SensorStateClass, SensorDeviceClass
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
+from .entity import MSpaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class MSpaSensor(CoordinatorEntity, SensorEntity):
+class MSpaSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
     def __init__(self, coordinator, key):
         super().__init__(coordinator)
         self._key = key
@@ -34,6 +35,7 @@ class MSpaSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"mspa_{key}_{getattr(coordinator, 'device_id', 'unknown')}"
         self._attr_state_class = SENSOR_TYPES[key][2]
         self._attr_device_class = SENSOR_TYPES[key][2]
+        self._attr_device_info = self.device_info
 
     @property
     def state(self):
