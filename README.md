@@ -18,7 +18,7 @@ Refer to the installation and configuration instructions below to get started.
 ## Installation
 
 1. **Add this repository to HACS:**
-    - In Home Assistant, go to **HACS** > **Integrations**.
+    - In Home Assistant, go to **HACS**.
     - Click the three dots in the top right and select **Custom repositories**.
     - Enter the URL of this repository and select **Integration** as the category.
     - Click **Add**.
