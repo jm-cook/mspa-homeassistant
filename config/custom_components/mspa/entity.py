@@ -14,6 +14,6 @@ class MSpaEntity(Entity):
             "identifiers": {(DOMAIN, "mspa_hottub")},
             "name": "MSpa Hot Tub",
             "manufacturer": "MSpa",
-            "model": "Delight Series",
+            "model": getattr(self.coordinator, "product_id", None)",
             "sw_version": "1.0.0",
         }

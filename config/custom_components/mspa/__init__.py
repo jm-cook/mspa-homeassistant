@@ -19,8 +19,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    _LOGGER.debug("MSpa integration %s setup %s %s", Platform.SENSOR, entry.title, entry.entry_id)
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR, Platform.SWITCH])
+    _LOGGER.debug("MSpa integration %s setup %s %s", DOMAIN, entry.title, entry.entry_id)
+
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        [
+            Platform.SENSOR,
+            Platform.SWITCH,
+            Platform.CLIMATE
+        ]
+    )
     _LOGGER.debug("MSpa coordinator set up and initial data fetched")
 
     # Register services
