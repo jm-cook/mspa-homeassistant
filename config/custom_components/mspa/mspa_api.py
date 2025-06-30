@@ -106,13 +106,13 @@ class MSpaApiClient:
             payload = {
                 "device_id": self.device_id,
                 "product_id": self.product_id,
-                "desired": self.json.dumps({"state": {"desired": desired_dict}})
+                "desired": json.dumps({"state": {"desired": desired_dict}})
             }
         else:
             payload = {
                 "device_id": self.device_id,
                 "product_id": self.product_id,
-                "desired": self.json.dumps({"state": {"desired": desired_dict, "bubble_level": bubble_level}})
+                "desired": json.dumps({"state": {"desired": desired_dict, "bubble_level": bubble_level}})
             }
         url = "https://api.iot.the-mspa.com/api/device/command"
         response = requests.post(url, headers=headers, json=payload).json()
@@ -130,8 +130,8 @@ class MSpaApiClient:
     def set_heater_state(self, state: int):
         return self.send_device_command({"heater_state": state})
 
-    def set_bubble_state(self, state: int, level: int):
-        return self.send_device_command({"bubble_state": state, "bubble_level": level})
+    def set_bubble_state(self, state: int):
+        return self.send_device_command({"bubble_state": state})
 
     def set_bubble_level(self, level: int):
         return self.send_device_command({"bubble_level": level})
@@ -143,7 +143,7 @@ class MSpaApiClient:
         return self.send_device_command({"filter_state": state})
 
     def set_temperature_setting(self, temp: int):
-        return self.send_device_command({"temperature_setting": temp})
+        return self.send_device_command({"temperature_setting": temp*2})
 
     def get_hot_tub_status(self, retry=False):
         nonce = self.generate_nonce()
