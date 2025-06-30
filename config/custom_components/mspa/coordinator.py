@@ -84,6 +84,31 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.error("Failed to set temperature: %s", str(err))
             raise
 
+    async def set_feature(self, feature: str, state: str) -> None:
+        """Set a feature state (heater, filter, bubble, jet)."""
+        _LOGGER.debug(f"Setting MSpa feature {feature} to {state}")
+        try:
+            if state.lower() not in ["on", "off"]:
+                raise ValueError("State must be 'on' or 'off'")
+            numerical_state = 1 if state.lower() == "on" else 0
+
+            if feature == "heater":
+                await self.hass.async_add_executor_job(self.api.set_heater_state, numerical_state)
+            elif feature == "filter":
+                await self.hass.async_add_executor_job(self.api.set_filter_state, numerical_state)
+            elif feature == "bubble":
+                await self.hass.async_add_executor_job(self.api.set_bubble_state, numerical_state)
+            elif feature == "jet":
+                await self.hass.async_add_executor_job(self.api.set_jet_state, numerical_state)
+            else:
+                raise ValueError(f"Unknown feature: {feature}")
+
+            await self.async_request_refresh()
+        except Exception as err:
+            _LOGGER.error("Failed to set %s to %s: %s", feature, state, str(err))
+            raise
+
+
     async def set_heater(self, service: ServiceCall) -> None: # str, state: str) -> None:
         """Set a feature state (heater, filter, bubble, jet)."""
         feature = service.service
