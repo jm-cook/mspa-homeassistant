@@ -1,4 +1,0 @@
-mspa_hot_tub:
-    module: mspa
-    class: MSpaHotTub
-    script_path: /path/to/your/hot_tub.py

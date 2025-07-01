@@ -1,3 +1,0 @@
-service: appdaemon.mspa/set_temperature
-data:
-  temperature: 38
