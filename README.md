@@ -1,4 +1,7 @@
-# Custom Component Installation via HACS
+# MSpa Custom Component Integration and Installation via HACS
+
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs) ![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)
 
 This repository contains a custom Home Assistant component. You can easily install it using [HACS](https://hacs.xyz/).
 
@@ -34,16 +37,7 @@ Refer to the installation and configuration instructions below to get started.
 4. **Configure the Integration:**
     - Follow the documentation or configuration instructions specific to this component.
 
-## Obtaining `device_id` and `product_id`
 
-To control your MSPA hot tub, you will need the `device_id` and `product_id` associated with your device. Follow these steps to obtain them from the MSPA Link app:
-
-1. Open the MSPA Link app on your mobile device and log in.
-2. Go to the device list and select your hot tub.
-3. Tap the device settings or information icon (found in the top left corner).
-4. At the bottom of the main screen you will see the `device_id` displayed as a long alphanumeric string. Note this down ready to configure the integration.
-5. To obtain the `product_id` you may need to look in the data on your network returned to the app when sending commands.
-5. Note down these values for use in the integration configuration.
 
 ## Configuration
 
@@ -54,11 +48,16 @@ create a guest account on the MSPA Link app to avoid using your main account cre
 2. Click on **Add Integration**.
 3. Search for **mspa** and select it.
 4. Enter the required information:
-   - `device_id`: The device ID you obtained from the MSPA Link app.
-   - `product_id`: The product ID you obtained from the MSPA Link app.
    - `account_email`: Your guest email for the MSPA account.
    - `password`: The MSPA account password for the guest user.
 5. Click **Submit** to complete the configuration.
+6. You can now control your MSPA hot tub through Home Assistant.
+
+
+![img.png](img/img3.png)
+
+If the registration is successful then you will see your device and 
+some entities for monitoring and controlling it .
 
 ![img.png](img/img.png)
 
@@ -68,6 +67,9 @@ create a guest account on the MSPA Link app to avoid using your main account cre
 
 - Make sure you are running the latest version of HACS.
 - Check the Home Assistant logs for any errors if the component does not load.
+- Ensure that you have created and are using a guest account for Home Assistant with its own email and password in the MSPA Link app.
+- you can only have one mspa integration per Home Assistant instance. If you have multiple MSPA hot tubs, you will need to set up separate instances of Home Assistant for each one.
+
 
 ## Support
 
