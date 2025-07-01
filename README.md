@@ -62,6 +62,8 @@ create a guest account on the MSPA Link app to avoid using your main account cre
 
 ![img.png](img/img.png)
 
+![img.png](img/img2.png)
+
 ## Troubleshooting
 
 - Make sure you are running the latest version of HACS.
