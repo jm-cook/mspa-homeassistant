@@ -18,7 +18,7 @@ app_secret = "87025c9ecd18906d27225fe79cb68349"
 
 
 class MSpaApiClient:
-    def __init__(self, account_email, password, device_id, product_id, token_file="token.txt"):
+    def __init__(self, account_email, password, device_id, product_id, token_file="mspa_authentication_token.txt"):
         self.account_email = account_email
         self.password = password
         self.device_id = device_id
@@ -79,6 +79,7 @@ class MSpaApiClient:
         token_request_url = "https://api.iot.the-mspa.com/api/enduser/get_token/"
         response = requests.post(token_request_url, headers=headers, json=payload).json()
         token = response.get("data", {}).get("token")
+        _LOGGER.debug("authenticate response: %s", response)
         if token is not None:
             self.write_token(token)
             return token
@@ -150,6 +151,36 @@ class MSpaApiClient:
 
     def set_temperature_setting(self, temp: int):
         return self.send_device_command({"temperature_setting": temp*2})
+
+    def get_hot_tub_status(self, retry=False):
+        nonce = self.generate_nonce()
+        ts = self.current_ts()
+        sign = self.build_signature(nonce, ts)
+        headers = {
+            "push_type": "Android",
+            "authorization": "token " + self.get_former_token(),
+            "appid": self.app_id,
+            "nonce": nonce,
+            "ts": ts,
+            "lan_code": "de",
+            "sign": sign,
+            "content-type": "application/json; charset=UTF-8",
+            "accept-encoding": "gzip",
+            "user-agent": "okhttp/4.9.0"
+        }
+        payload = {
+            "device_id": self.device_id,
+            "product_id": self.product_id
+        }
+        url = "https://api.iot.the-mspa.com/api/device/thing_shadow/"
+        response = requests.post(url, headers=headers, json=payload).json()
+        if not response.get("data") and not retry:
+            token = self.authenticate()
+            self.write_token(token)
+            return self.get_hot_tub_status(True)
+        data = response["data"]
+        _LOGGER.debug("get_hot_tub_status %s", data)
+        return data
 
     def get_hot_tub_status(self, retry=False):
         nonce = self.generate_nonce()

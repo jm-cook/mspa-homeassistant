@@ -14,6 +14,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up MSpa from a config entry."""
+    _LOGGER.setLevel(logging.DEBUG)
     coordinator = MSpaUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
