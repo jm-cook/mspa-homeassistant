@@ -5,7 +5,7 @@
     "config_flow": true,
     "loggers": ["custom_components.mspa"],
     "codeowners": ["@jm-cook"],
-    "documentation": "https://github.com/yourusername/mspa",
+    "documentation": "https://github.com/jm-cook/mspa-homeassistant",
     "dependencies": [],
     "requirements": ["python-dotenv"],
     "iot_class": "local_polling",
