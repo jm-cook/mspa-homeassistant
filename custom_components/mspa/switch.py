@@ -2,13 +2,10 @@ from homeassistant.components.switch import SwitchEntity
 from .const import DOMAIN
 from .entity import MSpaEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
 from .coordinator import MSpaUpdateCoordinator
 import logging
 
 _LOGGER = logging.getLogger(__name__)
-# Switches for MSpa features
-# These switches control the heater, filter, bubble, and jet features of the MSpa hot tub.
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the MSpa switch entities."""
@@ -20,124 +17,67 @@ async def async_setup_entry(hass, entry, async_add_entities):
         MSpaJetSwitch(coordinator),
         MSpaOzoneSwitch(coordinator),
         MSpaUVCSwitch(coordinator)
-        # Add other switches here if needed
     ]
     async_add_entities(entities)
 
-
-class MSpaHeaterSwitch(CoordinatorEntity, MSpaEntity, SwitchEntity):
+class MSpaFeatureSwitch(CoordinatorEntity, MSpaEntity, SwitchEntity):
+    feature = None
+    icon = None
+    name = None
 
     def __init__(self, coordinator):
         super().__init__(coordinator)
-        self._attr_name = "Heater"
-        self._attr_icon = "mdi:hot-tub"
-        self._attr_unique_id = f"mspa_heater_{getattr(coordinator, 'device_id', 'unknown')}"
+        self._attr_name = self.name
+        self._attr_icon = self.icon
+        self._attr_unique_id = f"mspa_{self.feature}_{getattr(coordinator, 'device_id', 'unknown')}"
+        self.coordinator = coordinator
 
     @property
     def is_on(self):
-        _LOGGER.debug("heater is %s", self.coordinator._last_data.get("heater"))
-        return True if self.coordinator._last_data.get("heater") == "on" else False
+        state = self.coordinator.last_data.get(self.feature)
+        _LOGGER.debug("%s is %s", self.feature, state)
+        return state == "on"
 
     async def async_turn_on(self, **kwargs):
-        _LOGGER.debug("Turning on heater")
-        await self.coordinator.set_feature(feature="heater", state="on")
+        _LOGGER.debug("Turning on %s", self.feature)
+        await self.coordinator.set_feature_state(feature=self.feature, state="on")
 
     async def async_turn_off(self, **kwargs):
-        _LOGGER.debug("Turning off heater")
-        await self.coordinator.set_feature(feature="heater", state="off")
+        _LOGGER.debug("Turning off %s", self.feature)
+        await self.coordinator.set_feature_state(feature=self.feature, state="off")
 
-class MSpaFilterSwitch(MSpaEntity, SwitchEntity):
+class MSpaHeaterSwitch(MSpaFeatureSwitch):
+    feature = "heater"
+    icon = "mdi:hot-tub"
+    name = "Heater"
 
+class MSpaFilterSwitch(MSpaFeatureSwitch):
+    feature = "filter"
+    icon = "mdi:air-filter"
+    name = "Filter"
+
+class MSpaBubbleSwitch(MSpaFeatureSwitch):
+    feature = "bubble"
+    icon = "mdi:chart-bubble"
+    name = "Bubble"
+
+class MSpaJetSwitch(MSpaFeatureSwitch):
+    feature = "jet"
+    # icon = "mdi:jet"  # Uncomment if you want an icon
+    name = "Jet"
+
+class MSpaOzoneSwitch(MSpaFeatureSwitch):
+    feature = "ozone"
+    icon = "mdi:weather-hazy"
+    name = "Ozone"
     def __init__(self, coordinator):
         super().__init__(coordinator)
-        self._attr_name = "Filter"
-        self._attr_icon = "mdi:air-filter"
-        self._attr_unique_id = f"mspa_filter_{getattr(coordinator, 'device_id', 'unknown')}"
-
-    @property
-    def is_on(self):
-        _LOGGER.debug("filter is %s", self.coordinator._last_data.get("filter"))
-        return True if self.coordinator._last_data.get("filter") == "on" else False
-
-    async def async_turn_on(self, **kwargs):
-        await self.coordinator.set_feature(feature="filter", state="on")
-
-    async def async_turn_off(self, **kwargs):
-        await self.coordinator.set_feature(feature="filter", state="off")
-
-class MSpaBubbleSwitch(MSpaEntity, SwitchEntity):
-    def __init__(self, coordinator):
-        super().__init__(coordinator)
-        self._attr_name = "Bubble"
-        self._attr_icon = "mdi:chart-bubble"
-        self._attr_unique_id = f"mspa_bubble_{getattr(coordinator, 'device_id', 'unknown')}"
-
-    @property
-    def is_on(self):
-        _LOGGER.debug("bubble is %s", self.coordinator._last_data.get("bubble"))
-        return True if self.coordinator._last_data.get("bubble") == "on" else False
-
-    async def async_turn_on(self, **kwargs):
-        await self.coordinator.set_feature(feature="bubble", state="on")
-
-    async def async_turn_off(self, **kwargs):
-        await self.coordinator.set_feature(feature="bubble", state="off")
-
-class MSpaJetSwitch(MSpaEntity, SwitchEntity):
-    def __init__(self, coordinator):
-        super().__init__(coordinator)
-        self._attr_name = "Jet"
-        # self._attr_icon = "mdi:jet"
-        self._attr_unique_id = f"mspa_jet_{getattr(coordinator, 'device_id', 'unknown')}"
-
-    @property
-    def is_on(self):
-        _LOGGER.debug("jet is %s", self.coordinator._last_data.get("jet"))
-        return True if self.coordinator._last_data.get("jet") == "on" else False
-
-    async def async_turn_on(self, **kwargs):
-        await self.coordinator.set_feature(feature="jet", state="on")
-
-    async def async_turn_off(self, **kwargs):
-        await self.coordinator.set_feature(feature="jet", state="off")
-
-class MSpaOzoneSwitch(MSpaEntity, SwitchEntity):
-
-    def __init__(self, coordinator):
-        super().__init__(coordinator)
-        self._attr_name = "Ozone"
-        self._attr_icon = "mdi:weather-hazy"
-
-        self._attr_unique_id = f"mspa_ozone_{getattr(coordinator, 'device_id', 'unknown')}"
         coordinator.has_ozone_switch = True
 
-    @property
-    def is_on(self):
-        _LOGGER.debug("ozone is %s", self.coordinator._last_data.get("ozone"))
-        return True if self.coordinator._last_data.get("ozone") == "on" else False
-
-    async def async_turn_on(self, **kwargs):
-        await self.coordinator.set_feature(feature="ozone", state="on")
-
-    async def async_turn_off(self, **kwargs):
-        await self.coordinator.set_feature(feature="ozone", state="off")
-
-class MSpaUVCSwitch(MSpaEntity, SwitchEntity):
-
+class MSpaUVCSwitch(MSpaFeatureSwitch):
+    feature = "uvc"
+    icon = "mdi:weather-sunny-alert"
+    name = "UVC"
     def __init__(self, coordinator):
         super().__init__(coordinator)
-        self._attr_name = "UVC"
-        self._attr_icon = "mdi:weather-sunny-alert"
-        self._attr_unique_id = f"mspa_uvc_{getattr(coordinator, 'device_id', 'unknown')}"
         coordinator.has_uvc_switch = True
-
-    @property
-    def is_on(self):
-        _LOGGER.debug("uvc is %s", self.coordinator._last_data.get("uvc"))
-        return True if self.coordinator._last_data.get("uvc") == "on" else False
-
-    async def async_turn_on(self, **kwargs):
-        await self.coordinator.set_feature(feature="uvc", state="on")
-
-    async def async_turn_off(self, **kwargs):
-        await self.coordinator.set_feature(feature="uvc", state="off")
