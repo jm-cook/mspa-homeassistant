@@ -29,16 +29,16 @@ class MSpaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={
                     "account_email": user_input[CONF_EMAIL],
                     "password": hashlib.md5(user_input[CONF_PASSWORD].encode("utf-8")).hexdigest(),
-                    "device_id": user_input[CONF_DEVICE_ID],
-                    "product_id": user_input[CONF_PRODUCT_ID],
+                    # "device_id": user_input[CONF_DEVICE_ID],
+                    # "product_id": user_input[CONF_PRODUCT_ID],
                 }
             )
 
         data_schema=vol.Schema({
             vol.Required(CONF_EMAIL): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_DEVICE_ID): str,
-            vol.Required(CONF_PRODUCT_ID): str,
+            # vol.Required(CONF_DEVICE_ID): str,
+            # vol.Required(CONF_PRODUCT_ID): str,
         })
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 

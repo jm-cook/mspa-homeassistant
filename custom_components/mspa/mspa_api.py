@@ -4,9 +4,10 @@ import random
 import string
 import requests
 import json
-import sys
-import os
+
 import logging
+import functools
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,14 +19,36 @@ app_secret = "87025c9ecd18906d27225fe79cb68349"
 
 
 class MSpaApiClient:
-    def __init__(self, account_email, password, device_id, product_id, token_file="mspa_authentication_token.txt"):
+    def __init__(self, hass, account_email, password, coordinator, token=None):
         self.account_email = account_email
         self.password = password
-        self.device_id = device_id
-        self.product_id = product_id
         self.app_id = app_id
         self.app_secret = app_secret
-        self.token_file = token_file
+        self.hass = hass
+        self._token = token or self.get_token_from_hass()
+        self.coordinator = coordinator
+        self.product_id = None
+        self.device_id = None
+        self.series = None
+        self.model = None
+        self.software_version = None
+
+    async def async_init(self):
+        device_list = await self.async_get_device_list()
+        _LOGGER.debug("device_list: %s", device_list)
+        if not device_list:
+            _LOGGER.error("No devices found. Please check your credentials and network connection.")
+            raise RuntimeError("MSpaApiClient initialization failed: No devices found.")
+        devices = device_list["list"]
+        self.product_id = devices[0]["product_id"]
+        self.device_id = devices[0]["device_id"]
+        self.series = devices[0]["product_series"]
+        self.model = devices[0]["product_model"]
+        self.software_version = devices[0]["software_version"]
+
+        self.coordinator.model = self.model
+        self.coordinator.series = self.series
+        self.coordinator.software_version = self.software_version
 
     @staticmethod
     def generate_nonce(length=32):
@@ -40,15 +63,15 @@ class MSpaApiClient:
         return hashlib.md5(raw.encode("utf-8")).hexdigest().upper()
 
     def get_former_token(self):
-        try:
-            with open(self.token_file, "r") as file:
-                return file.read().strip()
-        except FileNotFoundError:
-            return ""
+        return self._token or self.get_token_from_hass() or ""
 
-    def write_token(self, token):
-        with open(self.token_file, "w") as file:
-            file.write(token)
+
+    def get_token_from_hass(self):
+        return self.hass.data.get("mspa_token")
+
+    def set_token_in_hass(self, token):
+        self.hass.data["mspa_token"] = token
+        self._token = token
 
     def authenticate(self):
         nonce = self.generate_nonce()
@@ -81,10 +104,10 @@ class MSpaApiClient:
         token = response.get("data", {}).get("token")
         _LOGGER.debug("authenticate response: %s", response)
         if token is not None:
-            self.write_token(token)
+            self.set_token_in_hass(token)
             return token
         else:
-            return self.get_former_token()
+            return self.get_token_from_hass()
 
     def send_device_command(self, desired_dict, retry=False, bubble_level=-1):
         token = self.get_former_token()
@@ -175,14 +198,17 @@ class MSpaApiClient:
         url = "https://api.iot.the-mspa.com/api/device/thing_shadow/"
         response = requests.post(url, headers=headers, json=payload).json()
         if not response.get("data") and not retry:
-            token = self.authenticate()
-            self.write_token(token)
+            self.authenticate()
             return self.get_hot_tub_status(True)
         data = response["data"]
         _LOGGER.debug("get_hot_tub_status %s", data)
         return data
 
-    def get_hot_tub_status(self, retry=False):
+
+    async def async_get_device_list(self, retry=False):
+        return await self.hass.async_add_executor_job(functools.partial(self.get_device_list, retry))
+
+    def get_device_list(self, retry=False):
         nonce = self.generate_nonce()
         ts = self.current_ts()
         sign = self.build_signature(nonce, ts)
@@ -198,16 +224,12 @@ class MSpaApiClient:
             "accept-encoding": "gzip",
             "user-agent": "okhttp/4.9.0"
         }
-        payload = {
-            "device_id": self.device_id,
-            "product_id": self.product_id
-        }
-        url = "https://api.iot.the-mspa.com/api/device/thing_shadow/"
-        response = requests.post(url, headers=headers, json=payload).json()
+        url = "https://api.iot.the-mspa.com/api/enduser/devices/"
+        response = requests.get(url, headers=headers).json()
         if not response.get("data") and not retry:
-            token = self.authenticate()
-            self.write_token(token)
-            return self.get_hot_tub_status(True)
+            self.authenticate()
+            return self.get_device_list(True)
         data = response["data"]
-        _LOGGER.debug("get_hot_tub_status %s", data)
+        _LOGGER.debug("get_device_list %s", data)
         return data
+
