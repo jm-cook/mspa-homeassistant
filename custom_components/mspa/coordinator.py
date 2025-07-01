@@ -38,21 +38,21 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
         self.config = config_entry.data
         self.account_email = self.config["account_email"]
         self.password = self.config["password"]  # Already MD5 hashed
-        self.device_id = self.config["device_id"]
-        self.product_id = self.config["product_id"]
+
         self._last_data = {}
         self.api = MSpaApiClient(
+            hass=hass,
             account_email=self.account_email,
             password=self.password,
-            device_id=self.device_id,
-            product_id=self.product_id
+            coordinator=self,
         )
+
 
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via direct function call."""
         try:
             # Directly call the hot_tub status function
-            status_data = await self.hass.async_add_executor_job(self.api.get_hot_tub_status)
+            status_data = await self.hass.async_add_executor_job(self.api.get_hot_tub_status, None)
 
             transformed_data = {
                 "water_temperature": float(status_data.get("water_temperature", 0))/2,

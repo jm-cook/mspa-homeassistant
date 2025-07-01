@@ -12,8 +12,8 @@ class MSpaEntity(Entity):
     def device_info(self):
         return {
             "identifiers": {(DOMAIN, "mspa_hottub")},
-            "name": "MSpa Hot Tub",
+            "name": f"MSpa Hot Tub {getattr(self.coordinator, 'series', 'unknown')} series",
             "manufacturer": "MSpa",
-            "model": getattr(self.coordinator, "product_id", None),
-            "sw_version": "1.0.0",
+            "model": getattr(self.coordinator, "model", None),
+            "sw_version": getattr(self.coordinator, "software_version", "unknown"),
         }
