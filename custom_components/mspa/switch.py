@@ -27,10 +27,11 @@ class MSpaFeatureSwitch(CoordinatorEntity, MSpaEntity, SwitchEntity):
 
     def __init__(self, coordinator):
         super().__init__(coordinator)
-        self._attr_name = self.name
         self._attr_icon = self.icon
+        self._attr_name = f"mspa {self.name}".strip()
         self._attr_unique_id = f"mspa_{self.feature}_{getattr(coordinator, 'device_id', 'unknown')}"
         self.coordinator = coordinator
+        _LOGGER.debug("MSpaFeatureSwitch initialized for feature: %s, name: %s", self.feature, self.name)
 
     @property
     def is_on(self):
