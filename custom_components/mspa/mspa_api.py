@@ -32,6 +32,7 @@ class MSpaApiClient:
         self.series = None
         self.model = None
         self.software_version = None
+        self.product_pic_url = None
 
     async def async_init(self):
         device_list = await self.async_get_device_list()
@@ -45,10 +46,12 @@ class MSpaApiClient:
         self.series = devices[0]["product_series"]
         self.model = devices[0]["product_model"]
         self.software_version = devices[0]["software_version"]
+        self.product_pic_url = devices[0]["url"]
 
         self.coordinator.model = self.model
         self.coordinator.series = self.series
         self.coordinator.software_version = self.software_version
+        self.coordinator.product_pic_url = self.product_pic_url
 
     @staticmethod
     def generate_nonce(length=32):

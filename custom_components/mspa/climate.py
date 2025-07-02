@@ -6,13 +6,16 @@ from homeassistant.components.climate.const import (
 from .const import DOMAIN, TEMP_UNIT
 from .entity import MSpaEntity
 
+
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([MSpaClimate(coordinator)])
 
+
 class MSpaClimate(MSpaEntity, ClimateEntity):
     """Representation of the MSpa climate control entity."""
     name = "Heater Control"
+
     def __init__(self, coordinator):
         super().__init__(coordinator)
         self._attr_unique_id = f"mspa_climate_{getattr(coordinator, 'device_id', 'unknown')}"
@@ -22,7 +25,6 @@ class MSpaClimate(MSpaEntity, ClimateEntity):
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_min_temp = 20
         self._attr_max_temp = 40
-
 
     @property
     def current_temperature(self):
