@@ -12,10 +12,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class MSpaClimate(MSpaEntity, ClimateEntity):
     """Representation of the MSpa climate control entity."""
+    name = "Heater Control"
     def __init__(self, coordinator):
         super().__init__(coordinator)
         self._attr_unique_id = f"mspa_climate_{getattr(coordinator, 'device_id', 'unknown')}"
-        self._attr_name = "Heater control"
         self._attr_icon = "mdi:hot-tub"
         self._attr_temperature_unit = TEMP_UNIT
         self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]

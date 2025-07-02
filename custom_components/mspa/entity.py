@@ -5,15 +5,22 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 class MSpaEntity(Entity):
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator):
+        _LOGGER.debug("Initializing %s", self.__class__.__name__)
         self.coordinator = coordinator
+        # Set a separate internal name for the entity
+        self._attr_name = f"mspa {self.name}".strip()
+        _LOGGER.debug("internal name set to: %s", self._attr_name)
 
     @property
     def device_info(self):
         return {
             "identifiers": {(DOMAIN, "mspa_hottub")},
-            "name": f"MSpa Hot Tub {getattr(self.coordinator, 'series', 'unknown')} series",
             "manufacturer": "MSpa",
             "model": getattr(self.coordinator, "model", None),
+            "name": f"MSpa {getattr(self.coordinator, 'series', 'unknown')} {getattr(self.coordinator, 'model', '')}",
             "sw_version": getattr(self.coordinator, "software_version", "unknown"),
         }
+
