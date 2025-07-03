@@ -7,7 +7,7 @@
     "codeowners": ["@jm-cook"],
     "documentation": "https://github.com/jm-cook/mspa-homeassistant",
     "dependencies": [],
-    "requirements": ["python-dotenv"],
+    "requirements": [],
     "iot_class": "local_polling",
     "platforms": ["switch", "sensor", "climate"],
     "version": "1.0.2",
