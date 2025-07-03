@@ -43,8 +43,10 @@ Refer to the installation and configuration instructions below to get started.
 ## Configuration
 
 After installation, you will need to configure the integration in Home Assistant. Before carrying out these steps it is recommended to 
-create a guest account on the MSPA Link app to avoid using your main account credentials.
+create a guest account on the MSPA Link app to avoid using your main account credentials. Refer to the article here 
+to create a guest account: [Creating a Guest Account in the MSPA Link App](MSPA_LINK.md).
 
+To configure the MSPA integration in Home Assistant:
 1. Go to **Settings** > **Devices & Services**.
 2. Click on **Add Integration**.
 3. Search for **mspa** and select it.
