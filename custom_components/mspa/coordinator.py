@@ -69,7 +69,8 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
                     "bubble": "on" if status_data.get("bubble_state", 0) else "off",
                     "jet": "on" if status_data.get("jet_state", 0) else "off",
                     "ozone": "on" if status_data.get("ozone_state", 0) else "off",
-                    "uvc": "on" if status_data.get("uvc_state", 0) else "off"
+                    "uvc": "on" if status_data.get("uvc_state", 0) else "off",
+                    "bubble_level": status_data.get("bubble_level", 1)
                 }
 
                 self._last_data = transformed_data
@@ -118,9 +119,21 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             raise
 
     async def set_bubble_level(self, service: ServiceCall) -> None:
-        """Set the bubble level."""
+        """Set the bubble level only if bubble is on, else show a notification."""
         try:
-            bubble_level = service.data.get("Level")
+            bubble_level = service.data.get("level")
+            if self._last_data.get("bubble") != "on":
+                _LOGGER.warning("Cannot set bubble level: Bubble is not on.")
+                await self.hass.services.async_call(
+                    "persistent_notification",
+                    "create",
+                    {
+                        "title": "MSpa Bubble Level",
+                        "message": "Cannot set bubble level because the bubble feature is not on.",
+                    },
+                    blocking=True,
+                )
+                return
             _LOGGER.debug("Setting bubble level to %s", bubble_level)
             await self.hass.async_add_executor_job(self.api.set_bubble_level, bubble_level)
             await self.async_request_refresh()
