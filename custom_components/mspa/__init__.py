@@ -1,9 +1,11 @@
 import logging
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+
 from .const import DOMAIN
 from .coordinator import MSpaUpdateCoordinator
-from homeassistant.const import Platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +28,11 @@ def _register_services(hass, coordinator):
         hass.services.async_register(DOMAIN, service, getattr(coordinator, service))
         _LOGGER.debug('MSpa registered "%s" service', service)
 
+def _unregister_services(hass):
+    for service in SERVICES:
+        hass.services.async_remove(DOMAIN, service)
+        _LOGGER.debug('MSpa unregistered "%s" service', service)
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up MSpa from a config entry."""
     _LOGGER.setLevel(logging.DEBUG)
@@ -45,5 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id, None)
-    return True
+    _LOGGER.debug("Unloading MSpa integration %s for entry %s", DOMAIN, entry.entry_id)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        _unregister_services(hass)
+        _LOGGER.debug("MSpa integration %s unloaded successfully for entry %s", DOMAIN, entry.entry_id)
+    return unload_ok
