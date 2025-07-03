@@ -25,18 +25,18 @@ Refer to the installation and configuration instructions below to get started.
     - In Home Assistant, go to **HACS**.
     - Click the three dots in the top right and select **Custom repositories**.
     - Enter the URL of this repository and select **Integration** as the category.
-    - Click **Download**.
-    - Now restart homeassistant to load the new integration.
+    - Click **ADD**.
 
 2. **Install the Integration:**
-    - After adding the repository, search for the custom component in HACS.
-    - Click **Install**.
+    - After adding the repository, search for the custom component "MSPA Hot Tub integration" in HACS.
+    - Click **Download** in the 3-dots menu, or click on the entry in HACS and click the blue **DOWNLOAD** button.
 
 3. **Restart Home Assistant:**
     - Go to **Settings** > **System** > **Restart** to apply the changes.
+    - Alternatively Home Assistant will provide a "repair" in settings that you may click on to restart Home Assistant. 
 
 4. **Configure the Integration:**
-    - Follow the documentation or configuration instructions specific to this component.
+    - Follow the documentation or configuration instructions specific to this component below.
 
 
 
