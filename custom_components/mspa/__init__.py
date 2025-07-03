@@ -9,7 +9,13 @@ from .coordinator import MSpaUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.CLIMATE]
+PLATFORMS = [
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.CLIMATE,
+    Platform.NUMBER
+]
+
 SERVICES = [
     "set_temperature",
     "set_heater",
