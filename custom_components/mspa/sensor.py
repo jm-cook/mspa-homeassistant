@@ -8,7 +8,7 @@ from .entity import MSpaEntity
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    "water_temperature": ["Water Temperature", "°C", SensorDeviceClass.TEMPERATURE] #,
+    "water_temperature": ["Water Temperature", "°C", SensorStateClass.MEASUREMENT, SensorDeviceClass.TEMPERATURE] #,
     # "target_temperature": ["Target Temperature", "°C", SensorDeviceClass.TEMPERATURE],
     # "heater": ["Heater", None, None],
     # "filter": ["Filter", None, None],
@@ -44,14 +44,14 @@ class MSpaSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
             return
         self._key = key
         self._attr_name = SENSOR_TYPES[key][0]
-        self._attr_unit_of_measurement = SENSOR_TYPES[key][1]
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[key][1]
         self._attr_unique_id = f"mspa_{key}_{getattr(coordinator, 'device_id', 'unknown')}"
         self._attr_state_class = SENSOR_TYPES[key][2]
-        self._attr_device_class = SENSOR_TYPES[key][2]
+        self._attr_device_class = SENSOR_TYPES[key][3]
         self._attr_device_info = self.device_info
 
     @property
-    def state(self):
+    def native_value(self):
         return self.coordinator._last_data.get(self._key)
 
     @property
