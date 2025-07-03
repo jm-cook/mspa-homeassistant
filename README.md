@@ -51,20 +51,44 @@ To configure the MSPA integration in Home Assistant:
 2. Click on **Add Integration**.
 3. Search for **mspa** and select it.
 4. Enter the required information:
-   - `account_email`: Your guest email for the MSPA account.
+   - `email`: Your guest email for the MSPA account.
    - `password`: The MSPA account password for the guest user.
+
+   ![img.png](img/img3.png)
+
+
 5. Click **Submit** to complete the configuration.
 6. You can now control your MSPA hot tub through Home Assistant.
 
 
-![img.png](img/img3.png)
+
 
 If the registration is successful then you will see your device and 
 some entities for monitoring and controlling it .
 
+## Integration page
+
+![img.png](img/img6.png)
+
+## Device page
+
 ![img.png](img/img.png)
 
+7. You can now add the entities to your dashboard or use them in automations.
+
+   - **Example Entities:**
+     - `switch.mspa_hot_tub_heater`: To turn the hot tub on or off.
+     - `sensor.mspa_hot_tub_water_temperature`: To monitor the current temperature.
+     - `switch.mspa_hot_tub_bubbles`: To control the bubbles.
+     - `switch.mspa_hot_tub_filter`: To control the filtration system.
+
+## Thermostat popup
+
 ![img.png](img/img2.png)
+
+## Example dashboard using mushroom cards:
+
+![img.png](img/img7.png)
 
 ## Troubleshooting
 
