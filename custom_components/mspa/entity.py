@@ -16,6 +16,7 @@ class MSpaEntity(Entity):
 
     @property
     def device_info(self):
+        name = getattr(self.coordinator, "device_alias", f"MSpa {getattr(self.coordinator, 'series', 'unknown')} {getattr(self.coordinator, 'model', '')}")
         return {
             "identifiers": {(DOMAIN, "mspa_hottub")},
             "manufacturer": "MSpa",

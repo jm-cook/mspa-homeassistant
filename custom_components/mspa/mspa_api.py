@@ -41,19 +41,23 @@ class MSpaApiClient:
             _LOGGER.error("No devices found. Please check your credentials and network connection.")
             raise RuntimeError("MSpaApiClient initialization failed: No devices found.")
         devices = device_list["list"]
-        self.product_id = devices[0]["product_id"]
-        self.device_id = devices[0]["device_id"]
-        self.series = devices[0]["product_series"]
-        self.model = devices[0]["product_model"]
-        self.software_version = devices[0]["software_version"]
-        self.product_pic_url = devices[0]["url"]
-
+        self.product_id = devices[0]["product_id"] if "product_id" in devices[0] else None
+        self.device_id = devices[0]["device_id"] if "device_id" in devices[0] else None
+        self.series = devices[0]["product_series"] if "product_series" in devices[0] else None
+        self.model = devices[0]["product_model"] if "product_model" in devices[0] else None
+        self.software_version = devices[0]["software_version"] if "software_version" in devices[0] else None
+        self.product_pic_url = devices[0]["url"] if "url" in devices[0] else None
+        if "device_alias" in devices[0]:
+            if devices[0]["device_alias"] != self.model:
+                self.device_alias = devices[0]["device_alias"]
         self.coordinator.model = self.model
         self.coordinator.series = self.series
         self.coordinator.software_version = self.software_version
         self.coordinator.product_pic_url = self.product_pic_url
+        self.coordinator.device_alias = self.device_alias
 
-    @staticmethod
+
+@staticmethod
     def generate_nonce(length=32):
         return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
