@@ -90,6 +90,12 @@ some entities for monitoring and controlling it .
 
 ![img.png](img/img7.png)
 
+## Note
+
+There are some limitations to this integration:
+- It is not currently possible to determine which features your specific MSPA hot tub supports. If you find that some features, such as jet or ozone, do not work, it may be due to the specific model of your hot tub. You can disable the relevant entities in the Home Assistant UI.
+
+
 ## Troubleshooting
 
 - Make sure you are running the latest version of HACS.
