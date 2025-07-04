@@ -49,7 +49,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
 
 
     async def async_request_refresh(self) -> None:
-        async with self._update_lock:
+        # async with self._update_lock:
             await asyncio.sleep(10)  # Wait for 10 seconds before proceeding so that any pending commands will have time to complete
             await super().async_request_refresh()
 
@@ -57,9 +57,9 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via direct function call."""
         try:
-            async with self._update_lock:
+            # async with self._update_lock:
                 # Directly call the hot_tub status function
-                status_data = await self.hass.async_add_executor_job(self.api.get_hot_tub_status, None)
+                status_data = await self.api.get_hot_tub_status()
 
                 transformed_data = {
                     "water_temperature": float(status_data.get("water_temperature", 0))/2,
@@ -87,7 +87,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
     FEATURE_API_MAP = {
         "heater": "set_heater_state",
         "filter": "set_filter_state",
-        "bubble": "set_bubble_state",
+        # "bubble": "set_bubble_state",
         "jet": "set_jet_state",
         "ozone": "set_ozone_state",
         "uvc": "set_uvc_state",
@@ -101,7 +101,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
                 raise ValueError("State must be 'on' or 'off'")
             numerical_state = 1 if state.lower() == "on" else 0
             api_method = getattr(self.api, self.FEATURE_API_MAP[feature])
-            await self.hass.async_add_executor_job(api_method, numerical_state)
+            await api_method(numerical_state)
             await self.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set %s to %s: %s", feature, state, str(err))
@@ -112,34 +112,56 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
         try:
             temperature = service.data.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Setting temperature to %s", temperature)
-            await self.hass.async_add_executor_job(self.api.set_temperature_setting, temperature)
+            await self.api.set_temperature_setting(temperature)
             await self.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set temperature: %s", str(err))
             raise
 
+    async def set_bubble(self, service: ServiceCall) -> None:
+        """Set the bubble state."""
+        try:
+            bubble_state = service.data.get(ATTR_STATE)
+            _LOGGER.debug("Setting bubble state to %s", bubble_state)
+            numerical_state = 1 if bubble_state.lower() == "on" else 0
+            await self.api.set_bubble_state(numerical_state, self._last_data.get("bubble_level", 1))
+            await self.async_request_refresh()
+        except Exception as err:
+            _LOGGER.error("Failed to set bubble state: %s", str(err))
+            raise
+
     async def set_bubble_level(self, service: ServiceCall) -> None:
-        """Set the bubble level only if bubble is on, else show a notification."""
         try:
             bubble_level = service.data.get("level")
-            if self._last_data.get("bubble") != "on":
-                _LOGGER.warning("Cannot set bubble level: Bubble is not on.")
-                await self.hass.services.async_call(
-                    "persistent_notification",
-                    "create",
-                    {
-                        "title": "MSpa Bubble Level",
-                        "message": "Cannot set bubble level because the bubble feature is not on.",
-                    },
-                    blocking=True,
-                )
-                return
             _LOGGER.debug("Setting bubble level to %s", bubble_level)
-            await self.hass.async_add_executor_job(self.api.set_bubble_level, bubble_level)
+            await self.api.set_bubble_level(bubble_level)
             await self.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set bubble level: %s", str(err))
             raise
+
+    # async def set_bubble_level(self, service: ServiceCall) -> None:
+    #     """Set the bubble level only if bubble is on, else show a notification."""
+    #     try:
+    #         bubble_level = service.data.get("level")
+    #         if self._last_data.get("bubble") != "on":
+    #             _LOGGER.warning("Cannot set bubble level: Bubble is not on.")
+    #             await self.hass.services.async_call(
+    #                 "persistent_notification",
+    #                 "create",
+    #                 {
+    #                     "title": "MSpa Bubble Level",
+    #                     "message": "Cannot set bubble level because the bubble feature is not on.",
+    #                 },
+    #                 blocking=True,
+    #             )
+    #             return
+    #         _LOGGER.debug("Setting bubble level to %s", bubble_level)
+    #         await self.hass.async_add_executor_job(self.api.set_bubble_level, bubble_level)
+    #         await self.async_request_refresh()
+    #     except Exception as err:
+    #         _LOGGER.error("Failed to set bubble level: %s", str(err))
+    #         raise
 
     # Generic service handler for features
     async def handle_feature_service(self, service: ServiceCall) -> None:
@@ -151,7 +173,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
     # set_heater, set_filter, set_bubble, set_jet, set_ozone, set_uvc
     set_heater = handle_feature_service
     set_filter = handle_feature_service
-    set_bubble = handle_feature_service
+    # set_bubble = handle_feature_service
     set_jet = handle_feature_service
     set_ozone = handle_feature_service
     set_uvc = handle_feature_service
