@@ -57,11 +57,6 @@ class MSpaFilterSwitch(MSpaFeatureSwitch):
     icon = "mdi:air-filter"
     name = "Filter"
 
-class MSpaBubbleSwitch(MSpaFeatureSwitch):
-    feature = "bubble"
-    icon = "mdi:chart-bubble"
-    name = "Bubble"
-
 class MSpaJetSwitch(MSpaFeatureSwitch):
     feature = "jet"
     # icon = "mdi:jet"  # Uncomment if you want an icon
@@ -82,3 +77,20 @@ class MSpaUVCSwitch(MSpaFeatureSwitch):
     def __init__(self, coordinator):
         super().__init__(coordinator)
         coordinator.has_uvc_switch = True
+
+class MSpaBubbleSwitch(MSpaFeatureSwitch):
+    # Bubble switch for MSpa needs to be defined separately
+    # as it has a different service call structure
+    feature = "bubble"
+    icon = "mdi:chart-bubble"
+    name = "Bubble"
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+
+    async def async_turn_on(self, **kwargs):
+        _LOGGER.debug("Turning on %s", self.feature)
+        await self.coordinator.set_bubble(type("ServiceCall", (), {"data": {"state": "on"}}))
+
+    async def async_turn_off(self, **kwargs):
+        _LOGGER.debug("Turning off %s", self.feature)
+        await self.coordinator.set_bubble(type("ServiceCall", (), {"data": {"state": "off"}}))
