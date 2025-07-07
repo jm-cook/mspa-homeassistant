@@ -18,13 +18,13 @@ jobs:
         
       # Pack the MSPA dir as a zip and upload to the release
       - name: 📦 ZIP MSPA Dir
-        if: ${{ github.event_name == 'release' }}
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           cd ${{ github.workspace }}/custom_components/mspa
           zip mspa.zip -r ./
 
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: ${{ github.event_name == 'release' }}
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: ${{ github.workspace }}/custom_components/mspa/mspa.zip
