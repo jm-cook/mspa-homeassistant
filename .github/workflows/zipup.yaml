@@ -1,0 +1,26 @@
+name: Zip me up
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zip-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: vimtor/action-zip@v1.2
+        id: create_zip
+        with:
+          files: custom_components/ 
+          dest: mspa.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mspa download
+          path: ${{ github.workspace }}/mspa.zip
