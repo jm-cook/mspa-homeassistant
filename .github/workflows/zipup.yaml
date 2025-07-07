@@ -9,16 +9,21 @@ permissions:
   contents: read
 
 jobs:
-  zip-files:
+  release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: vimtor/action-zip@v1.2
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Zip artifact
+        uses: vimtor/action-zip@v1.2
         id: create_zip
         with:
           files: custom_components/ 
           dest: mspa.zip
-      - uses: actions/upload-artifact@v4
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: mspa download
-          path: ${{ github.workspace }}/mspa.zip
+            draft: true
+            generate_release_notes: true
+            files: ${{ github.workspace }}/mspa.zip
