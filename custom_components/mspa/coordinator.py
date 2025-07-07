@@ -14,10 +14,11 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    ATTR_TEMPERATURE,
-    ATTR_STATE,
+    DEFAULT_SCAN_INTERVAL
 )
+
+from homeassistant.const import ATTR_STATE, ATTR_TEMPERATURE
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,29 +140,6 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
         except Exception as err:
             _LOGGER.error("Failed to set bubble level: %s", str(err))
             raise
-
-    # async def set_bubble_level(self, service: ServiceCall) -> None:
-    #     """Set the bubble level only if bubble is on, else show a notification."""
-    #     try:
-    #         bubble_level = service.data.get("level")
-    #         if self._last_data.get("bubble") != "on":
-    #             _LOGGER.warning("Cannot set bubble level: Bubble is not on.")
-    #             await self.hass.services.async_call(
-    #                 "persistent_notification",
-    #                 "create",
-    #                 {
-    #                     "title": "MSpa Bubble Level",
-    #                     "message": "Cannot set bubble level because the bubble feature is not on.",
-    #                 },
-    #                 blocking=True,
-    #             )
-    #             return
-    #         _LOGGER.debug("Setting bubble level to %s", bubble_level)
-    #         await self.hass.async_add_executor_job(self.api.set_bubble_level, bubble_level)
-    #         await self.async_request_refresh()
-    #     except Exception as err:
-    #         _LOGGER.error("Failed to set bubble level: %s", str(err))
-    #         raise
 
     # Generic service handler for features
     async def handle_feature_service(self, service: ServiceCall) -> None:

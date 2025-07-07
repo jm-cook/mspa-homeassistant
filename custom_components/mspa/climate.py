@@ -3,7 +3,8 @@ from homeassistant.components.climate.const import (
     ClimateEntityFeature,
     HVACMode,
 )
-from .const import DOMAIN, TEMP_UNIT
+from homeassistant.const import PRECISION_HALVES
+from .const import DOMAIN, TEMP_UNIT, MAX_TEMP, MIN_TEMP
 from .entity import MSpaEntity
 
 
@@ -16,15 +17,21 @@ class MSpaClimate(MSpaEntity, ClimateEntity):
     """Representation of the MSpa climate control entity."""
     name = "Heater Control"
 
+    _attr_precision = PRECISION_HALVES
+    _attr_min_temp = MIN_TEMP
+    _attr_max_temp = MAX_TEMP
+    _attr_temperature_unit = TEMP_UNIT
+
     def __init__(self, coordinator):
         super().__init__(coordinator)
         self._attr_unique_id = f"mspa_climate_{getattr(coordinator, 'device_id', 'unknown')}"
         self._attr_icon = "mdi:hot-tub"
-        self._attr_temperature_unit = TEMP_UNIT
         self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        self._attr_min_temp = 20
-        self._attr_max_temp = 40
+        self._attr_supported_features = (
+                ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF
+        )
 
     @property
     def current_temperature(self):
@@ -48,13 +55,3 @@ class MSpaClimate(MSpaEntity, ClimateEntity):
             await self.coordinator.set_feature_state("heater", "on")
         elif hvac_mode == HVACMode.OFF:
             await self.coordinator.set_feature_state("heater", "off")
-
-    async def async_turn_on(self):
-        if HVACMode.HEAT in self.hvac_modes:
-            await self.async_set_hvac_mode(HVACMode.HEAT)
-            return
-
-    async def async_turn_off(self):
-        if HVACMode.OFF in self.hvac_modes:
-            await self.async_set_hvac_mode(HVACMode.OFF)
-            return

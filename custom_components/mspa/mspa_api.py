@@ -47,17 +47,17 @@ class MSpaApiClient:
         self.model = devices[0]["product_model"] if "product_model" in devices[0] else None
         self.software_version = devices[0]["software_version"] if "software_version" in devices[0] else None
         self.product_pic_url = devices[0]["url"] if "url" in devices[0] else None
-        if "device_alias" in devices[0]:
-            if devices[0]["device_alias"] != self.model:
-                self.device_alias = devices[0]["device_alias"]
+
+        self.device_alias = devices[0]["device_alias"] if "device_alias" in devices[0] else None
         self.coordinator.model = self.model
         self.coordinator.series = self.series
         self.coordinator.software_version = self.software_version
         self.coordinator.product_pic_url = self.product_pic_url
+        self.coordinator.device_id = self.device_id
+        self.coordinator.product_id = self.product_id
         self.coordinator.device_alias = self.device_alias
 
-
-@staticmethod
+    @staticmethod
     def generate_nonce(length=32):
         return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
