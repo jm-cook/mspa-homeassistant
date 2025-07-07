@@ -25,4 +25,8 @@ jobs:
         with:
           name: mspa-download
           path: ${{ github.workspace }}/mspa.zip
-
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: ${{ github.workspace }}/mspa.zip
