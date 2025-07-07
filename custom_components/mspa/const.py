@@ -1,10 +1,5 @@
 """Constants for the MSpa Hot Tub integration."""
-from homeassistant.const import (
-    UnitOfTemperature,
-    CONF_EMAIL,
-    CONF_PASSWORD,
-    CONF_DEVICE_ID,
-)
+from homeassistant.const import  UnitOfTemperature
 
 DOMAIN = "mspa"
 DEFAULT_SCAN_INTERVAL = 60
@@ -19,8 +14,7 @@ SERVICE_SET_BUBBLE = "set_bubble"
 SERVICE_SET_JET = "set_jet"
 SERVICE_SET_FILTER = "set_filter"
 
-# Attributes
-ATTR_TEMPERATURE = "temperature"
-ATTR_STATE = "state"
-
+# Default values
 TEMP_UNIT = UnitOfTemperature.CELSIUS
+MAX_TEMP = 40
+MIN_TEMP = 20
