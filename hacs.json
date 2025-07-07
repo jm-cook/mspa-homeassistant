@@ -2,5 +2,7 @@
   "name": "MSPA Hot Tub integration",
   "domains": ["sensor", "climate", "switch"],
   "homeassistant": "2025.6.1",
-  "country": ["NO"]
+  "country": ["NO"], 
+  "zip_relese": true,
+  "filename": "mspa.zip"
 }
