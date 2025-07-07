@@ -18,7 +18,7 @@ jobs:
         uses: vimtor/action-zip@v1.2
         id: create_zip
         with:
-          files: custom_components/ 
+          files: ./ 
           dest: mspa.zip
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
