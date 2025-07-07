@@ -19,11 +19,10 @@ jobs:
         id: create_zip
         with:
           files: custom_components/ 
-          dest: mspa.zip
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+          dest: /mspa.zip
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1.1
         with:
-            draft: true
-            generate_release_notes: true
-            files: ${{ github.workspace }}/mspa.zip
+          name: mspa-download
+          path: ${{ github.workspace }}/result.zip
+
