@@ -14,20 +14,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - run: echo " (zipped artifact)" >> README.md
-      - name: Zip artifact
-        uses: vimtor/action-zip@v1.2
-        id: create_zip
-        with:
-          files: ./ 
-          dest: mspa.zip
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: mspa-download
-          path: ${{ github.workspace }}/mspa.zip
+      - run: echo "(zipped artifact)" > ${{ github.workspace }}/custom_components/mspa/README.md
+        
+      # Pack the MSPA dir as a zip and upload to the release
+      - name: 📦 ZIP MSPA Dir
+        if: ${{ github.event_name == 'release' }}
+        run: |
+          cd ${{ github.workspace }}/custom_components/mspa
+          zip mspa.zip -r ./
+
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: github.ref_type == 'tag'
+        if: ${{ github.event_name == 'release' }}
         with:
-          files: ${{ github.workspace }}/mspa.zip
+          files: ${{ github.workspace }}/custom_components/mspa/mspa.zip
