@@ -48,3 +48,13 @@ class MSpaClimate(MSpaEntity, ClimateEntity):
             await self.coordinator.set_feature_state("heater", "on")
         elif hvac_mode == HVACMode.OFF:
             await self.coordinator.set_feature_state("heater", "off")
+
+    async def async_turn_on(self):
+        if HVACMode.HEAT in self.hvac_modes:
+            await self.async_set_hvac_mode(HVACMode.HEAT)
+            return
+
+    async def async_turn_off(self):
+        if HVACMode.OFF in self.hvac_modes:
+            await self.async_set_hvac_mode(HVACMode.OFF)
+            return
