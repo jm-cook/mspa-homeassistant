@@ -1,11 +1,9 @@
 name: Zip me up
 
 on:
-  push:
-    branches: [ $default-branch ]
-  pull_request:
-    branches: [ $default-branch ]
-  workflow_dispatch:
+    push:
+        tags:
+            - "v*.*.*"
 
 permissions:
   contents: read
