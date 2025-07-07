@@ -1,7 +1,5 @@
 # MSpa Custom Component Integration and Installation via HACS
 
-
-
 [![hacs][hacs-badge]][hacs-url]
 [![release][release-badge]][release-url]
 ![downloads][downloads-badge]
