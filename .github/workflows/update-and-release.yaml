@@ -1,4 +1,4 @@
-name: Zip me up
+name: Update and release
 
 on:
   release:
@@ -26,7 +26,7 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git add custom_components/mspa/manifest.json
           git commit -m "Update manifest version to ${{ github.ref_name }}"
-          git push
+          git push origin HEAD:main
 
   release:
     runs-on: ubuntu-latest
