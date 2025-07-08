@@ -1,14 +1,33 @@
 name: Zip me up
 
 on:
-    push:
-        tags:
-            - "v*.*.*"
+  release:
+    types: [published]
 
 permissions:
   contents: write
 
 jobs:
+  update-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set manifest.json version
+        uses: jossef/action-set-json-field@v2
+        with:
+          file: custom_components/mspa/manifest.json
+          field: version
+          value: ${{ github.ref_name }}
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add custom_components/mspa/manifest.json
+          git commit -m "Update manifest version to ${{ github.ref_name }}"
+          git push
+
   release:
     runs-on: ubuntu-latest
     steps:
@@ -18,13 +37,12 @@ jobs:
         
       # Pack the MSPA dir as a zip and upload to the release
       - name: 📦 ZIP MSPA Dir
-        if: startsWith(github.ref, 'refs/tags/')
         run: |
           cd ${{ github.workspace }}/custom_components/mspa
           zip mspa.zip -r ./
 
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: ${{ github.workspace }}/custom_components/mspa/mspa.zip
+
