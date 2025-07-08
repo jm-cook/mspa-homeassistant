@@ -20,13 +20,17 @@ jobs:
           field: version
           value: ${{ github.ref_name }}
 
-      - name: Commit and push changes
+      - name: Commit the updated manifest and push changes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add custom_components/mspa/manifest.json
           git commit -m "Update manifest version to ${{ github.ref_name }}"
           git push origin HEAD:main
+
+          # Move the tag to this commit and force-push
+          git tag -f ${{ github.ref_name }}
+          git push origin ${{ github.ref_name }} --force
 
   release:
     needs: update-manifest
