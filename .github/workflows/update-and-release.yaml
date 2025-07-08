@@ -29,6 +29,7 @@ jobs:
           git push origin HEAD:main
 
   release:
+    needs: update-manifest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
