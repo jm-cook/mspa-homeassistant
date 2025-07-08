@@ -1,8 +1,10 @@
 # MSpa Custom Component Integration and Installation via HACS
 
+[![hacs][hacs-badge]][hacs-url]
+![Maintenance][maintenance-badge]
+[![release][release-badge]][release-url]
+![downloads][downloads-badge]
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs) ![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/jm-cook/mspa-homeassistant/total)
 
 
 This repository contains a custom Home Assistant component. You can easily install it using [HACS](https://hacs.xyz/).
@@ -108,3 +110,12 @@ There are some limitations to this integration:
 ## Support
 
 For issues or feature requests, please open an issue in this repository.
+
+<!-- Badges -->
+[hacs-badge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square
+[release-badge]: https://img.shields.io/github/v/release/jm-cook/mspa-homeassistant?style=flat-square
+[downloads-badge]: https://img.shields.io/github/downloads/jm-cook/mspa-homeassistant/total?style=flat-square
+[hacs-url]: https://github.com/hacs/integration
+
+[maintenance-badge]: https://img.shields.io/maintenance/yes/2025.svg?style=flat-square
+[release-url]: https://github.com/jm-cook/mspa-homeassistant/releases
