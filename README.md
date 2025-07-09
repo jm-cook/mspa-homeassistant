@@ -84,6 +84,7 @@ some entities for monitoring and controlling it .
      - `sensor.mspa_hot_tub_water_temperature`: To monitor the current temperature.
      - `switch.mspa_hot_tub_bubbles`: To control the bubbles.
      - `switch.mspa_hot_tub_filter`: To control the filtration system.
+     - `sensor.mspa_hot_tub_fault`: To monitor the current fault status.
 
 ## Thermostat popup
 

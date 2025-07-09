@@ -2,6 +2,8 @@
 import logging
 from homeassistant.components.sensor import SensorEntity, SensorStateClass, SensorDeviceClass
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import EntityCategory
+
 from .const import DOMAIN
 from .entity import MSpaEntity
 
@@ -24,15 +26,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         MSpaSensor(coordinator, key)
         for key in SENSOR_TYPES
     ]
-    # _LOGGER.debug("ozone switch: %s", hasattr(coordinator, "has_ozone_switch"))
-    # if not hasattr(coordinator, "has_ozone_switch") or not coordinator.has_ozone_switch:
-    #     entities.append(MSpaSensor(coordinator, "ozone"))
-    #
-    # _LOGGER.debug("uvc switch: %s", hasattr(coordinator, "has_uvc_switch"))
-    # if not hasattr(coordinator, "has_uvc_switch") or not coordinator.has_uvc_switch:
-    #     entities.append(MSpaSensor(coordinator, "uvc"))
 
     async_add_entities(entities)
+    async_add_entities([MSpaFaultSensor(coordinator)], update_before_add=True)
 
 
 class MSpaSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
@@ -57,3 +53,27 @@ class MSpaSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
     @property
     def available(self):
         return self.coordinator.last_update_success
+
+class MSpaFaultSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
+    _attr_name = "Fault"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+
+        self._attr_device_info = self.device_info
+        self._attr_unique_id = f"mspa_fault_{getattr(coordinator, 'device_id', 'unknown')}"
+        _LOGGER.debug("Initializing MSpaFaultSensor with unique_id: %s", self._attr_unique_id)
+
+    @property
+    def state(self):
+        # Replace with actual fault state retrieval logic
+        return self.coordinator._last_data.get("fault", "OK")
+
+    @property
+    def icon(self):
+        return "mdi:alert" if self.state != "OK" else "mdi:check-circle"
+
+    @property
+    def entity_picture(self):
+        return None

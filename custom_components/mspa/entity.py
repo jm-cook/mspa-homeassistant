@@ -27,5 +27,4 @@ class MSpaEntity(Entity):
 
     @property
     def entity_picture(self):
-        # Replace with your actual image URL or logic
         return getattr(self.coordinator, "product_pic_url", None)
