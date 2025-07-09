@@ -41,7 +41,7 @@ def _unregister_services(hass):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up MSpa from a config entry."""
-    _LOGGER.setLevel(logging.DEBUG)
+    # _LOGGER.setLevel(logging.DEBUG)
     coordinator = MSpaUpdateCoordinator(hass, entry)
     await coordinator.api.async_init()
     await coordinator.async_config_entry_first_refresh()
@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("MSpa coordinator set up and initial data fetched")
 
     _register_services(hass, coordinator)
-    _LOGGER.debug("MSpa integration %s setup complete", DOMAIN)
+    _LOGGER.info("MSpa integration %s setup complete", DOMAIN)
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):

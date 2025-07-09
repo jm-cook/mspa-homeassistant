@@ -18,7 +18,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         MSpaOzoneSwitch(coordinator),
         MSpaUVCSwitch(coordinator)
     ]
-    async_add_entities(entities)
+    async_add_entities(entities, update_before_add=True)
 
 class MSpaFeatureSwitch(CoordinatorEntity, MSpaEntity, SwitchEntity):
     feature = None
