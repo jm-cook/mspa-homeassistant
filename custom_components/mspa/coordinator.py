@@ -52,7 +52,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
     async def async_request_refresh(self) -> None:
         # async with self._update_lock:
         #     await asyncio.sleep(10)  # Wait for 10 seconds before proceeding so that any pending commands will have time to complete
-            await super().async_request_refresh()
+        await super().async_request_refresh()
 
     async def async_delay_request_refresh(self) -> None:
         # async with self._update_lock:
@@ -66,6 +66,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
                 # Directly call the hot_tub status function
                 status_data = await self.api.get_hot_tub_status()
 
+                fault_value = status_data.get("fault", "")
                 transformed_data = {
                     "water_temperature": float(status_data.get("water_temperature", 0))/2,
                     "target_temperature": float(status_data.get("temperature_setting", 0))/2,
@@ -76,7 +77,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
                     "ozone": "on" if status_data.get("ozone_state", 0) else "off",
                     "uvc": "on" if status_data.get("uvc_state", 0) else "off",
                     "bubble_level": status_data.get("bubble_level", 1),
-                    "fault": status_data.get("fault", "OK"),
+                    "fault": fault_value if fault_value else "OK",
                 }
 
                 self._last_data = transformed_data
