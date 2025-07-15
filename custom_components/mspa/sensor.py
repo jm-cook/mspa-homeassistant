@@ -56,7 +56,7 @@ class MSpaSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
 
 class MSpaFaultSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
     _attr_name = "Fault"
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    # _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator):
         super().__init__(coordinator)
