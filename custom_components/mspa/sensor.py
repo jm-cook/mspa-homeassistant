@@ -10,8 +10,8 @@ from .entity import MSpaEntity
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    "water_temperature": ["Water Temperature", "°C", SensorStateClass.MEASUREMENT, SensorDeviceClass.TEMPERATURE] #,
-    # "target_temperature": ["Target Temperature", "°C", SensorDeviceClass.TEMPERATURE],
+    "water_temperature": ["Water Temperature", "°C", SensorStateClass.MEASUREMENT, SensorDeviceClass.TEMPERATURE],
+    "target_temperature": ["Target Temperature", "°C", SensorStateClass.MEASUREMENT, SensorDeviceClass.TEMPERATURE] #,
     # "heater": ["Heater", None, None],
     # "filter": ["Filter", None, None],
     # "bubble": ["Bubble", None, None],
