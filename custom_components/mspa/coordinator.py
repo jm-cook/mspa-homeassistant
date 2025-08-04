@@ -63,27 +63,45 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
         """Update data via direct function call."""
         try:
             # async with self._update_lock:
-                # Directly call the hot_tub status function
-                status_data = await self.api.get_hot_tub_status()
+            # Directly call the hot_tub status function
+            status_data = await self.api.get_hot_tub_status()
 
-                fault_value = status_data.get("fault", "")
-                transformed_data = {
-                    "water_temperature": float(status_data.get("water_temperature", 0))/2,
-                    "target_temperature": float(status_data.get("temperature_setting", 0))/2,
-                    "heater": "on" if status_data.get("heater_state", 0) else "off",
-                    "filter": "on" if status_data.get("filter_state", 0) else "off",
-                    "bubble": "on" if status_data.get("bubble_state", 0) else "off",
-                    "jet": "on" if status_data.get("jet_state", 0) else "off",
-                    "ozone": "on" if status_data.get("ozone_state", 0) else "off",
-                    "uvc": "on" if status_data.get("uvc_state", 0) else "off",
-                    "bubble_level": status_data.get("bubble_level", 1),
-                    "fault": fault_value if fault_value else "OK",
-                }
+            fault_value = status_data.get("fault", "")
+            transformed_data = {
+                "water_temperature": float(status_data.get("water_temperature", 0))/2,
+                "target_temperature": float(status_data.get("temperature_setting", 0))/2,
+                "heater": "on" if status_data.get("heater_state", 0) else "off",
+                "filter": "on" if status_data.get("filter_state", 0) else "off",
+                "bubble": "on" if status_data.get("bubble_state", 0) else "off",
+                "jet": "on" if status_data.get("jet_state", 0) else "off",
+                "ozone": "on" if status_data.get("ozone_state", 0) else "off",
+                "uvc": "on" if status_data.get("uvc_state", 0) else "off",
+                "bubble_level": status_data.get("bubble_level", 1),
+                "fault": fault_value if fault_value else "OK",
+                # Diagnostic sensors
+                "wifivertion": status_data.get("wifivertion"),
+                "otastatus": status_data.get("otastatus"),
+                "mcuversion": status_data.get("mcuversion"),
+                "ConnectType": status_data.get("ConnectType"),
+                "temperature_unit": status_data.get("temperature_unit"),
+                "auto_inflate": status_data.get("auto_inflate"),
+                "filter_current": status_data.get("filter_current"),
+                "safety_lock": status_data.get("safety_lock"),
+                "heat_time_switch": status_data.get("heat_time_switch"),
+                "heat_state": status_data.get("heat_state"),
+                "multimcuotainfo": status_data.get("multimcuotainfo"),
+                "heat_time": status_data.get("heat_time"),
+                "filter_life": status_data.get("filter_life"),
+                "trdversion": status_data.get("trdversion"),
+                "is_online": status_data.get("is_online"),
+                "warning": status_data.get("warning"),
+                "device_heat_perhour": status_data.get("device_heat_perhour"),
+            }
 
-                self._last_data = transformed_data
-                _LOGGER.debug("Fetched MSpa status_data: %s", status_data)
-                _LOGGER.debug("Fetched MSpa transformed data: %s", transformed_data)
-                return transformed_data
+            self._last_data = transformed_data
+            _LOGGER.debug("Fetched MSpa status_data: %s", status_data)
+            _LOGGER.debug("Fetched MSpa transformed data: %s", transformed_data)
+            return transformed_data
 
         except Exception as err:
             _LOGGER.error("Error updating MSpa data: %s", str(err))
