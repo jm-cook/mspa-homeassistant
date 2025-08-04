@@ -100,6 +100,14 @@ To enable it:
 
 The Filter status sensor will show `OK` when the filter is clean, and `Dirty` if the filter needs to be changed (when the warning code is `A0`).
 
+## Heating action (hvac_action)
+
+The integration also provides `hvac_action` as part of the climate sensor that indicates the current heating state of the hot tub.
+The climate entity will show the following states:
+- `off`: The hot tub is turned off.
+- `idle`: The hot tub is on but not actively heating. This would normally be the state when the water is at or above the desired temperature.
+- `heating`: The hot tub is actively heating the water.
+
 ## Thermostat popup
 
 ![img.png](img/img2.png)
