@@ -2,6 +2,7 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ClimateEntityFeature,
     HVACMode,
+    HVACAction,
 )
 from homeassistant.const import PRECISION_HALVES
 from .const import DOMAIN, TEMP_UNIT, MAX_TEMP, MIN_TEMP
@@ -49,6 +50,15 @@ class MSpaClimate(MSpaEntity, ClimateEntity):
     @property
     def hvac_mode(self):
         return HVACMode.HEAT if self.coordinator._last_data.get("heater") == "on" else HVACMode.OFF
+
+    @property
+    def hvac_action(self):
+        heat_state = self.coordinator._last_data.get("heat_state")
+        if heat_state == 3:
+            return HVACAction.HEATING
+        if heat_state == 4:
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
     async def async_set_hvac_mode(self, hvac_mode):
         if hvac_mode == HVACMode.HEAT:
