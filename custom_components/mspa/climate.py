@@ -6,7 +6,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import PRECISION_HALVES
 from .const import DOMAIN, TEMP_UNIT, MAX_TEMP, MIN_TEMP
-from .entity import MSpaEntity
+from .entity import MSpaClimateEntity
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -14,7 +14,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([MSpaClimate(coordinator)])
 
 
-class MSpaClimate(MSpaEntity, ClimateEntity):
+class MSpaClimate(MSpaClimateEntity):
     """Representation of the MSpa climate control entity."""
     name = "Heater Control"
 
@@ -36,11 +36,11 @@ class MSpaClimate(MSpaEntity, ClimateEntity):
 
     @property
     def current_temperature(self):
-        return self.coordinator._last_data.get("water_temperature")
+        return self.coordinator.last_data.get("water_temperature")
 
     @property
     def target_temperature(self):
-        return self.coordinator._last_data.get("target_temperature")
+        return self.coordinator.last_data.get("target_temperature")
 
     async def async_set_temperature(self, **kwargs):
         temperature = kwargs.get("temperature")
@@ -49,13 +49,13 @@ class MSpaClimate(MSpaEntity, ClimateEntity):
 
     @property
     def hvac_mode(self):
-        return HVACMode.HEAT if self.coordinator._last_data.get("heater") == "on" else HVACMode.OFF
+        return HVACMode.HEAT if self.coordinator.last_data.get("heater") == "on" else HVACMode.OFF
 
     @property
     def hvac_action(self):
-        heat_state = self.coordinator._last_data.get("heat_state")
-        if heat_state == 3:
-            return HVACAction.HEATING
+        heat_state = self.coordinator.last_data.get("heat_state")
+        if heat_state in (2, 3):
+             return HVACAction.HEATING
         if heat_state == 4:
             return HVACAction.IDLE
         return HVACAction.OFF

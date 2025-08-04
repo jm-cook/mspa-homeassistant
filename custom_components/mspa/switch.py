@@ -1,7 +1,5 @@
-from homeassistant.components.switch import SwitchEntity
 from .const import DOMAIN
-from .entity import MSpaEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from .entity import MSpaSwitchEntity
 from .coordinator import MSpaUpdateCoordinator
 import logging
 
@@ -20,7 +18,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ]
     async_add_entities(entities, update_before_add=True)
 
-class MSpaFeatureSwitch(CoordinatorEntity, MSpaEntity, SwitchEntity):
+class MSpaFeatureSwitch(MSpaSwitchEntity):
     feature = None
     icon = None
     name = None

@@ -1,12 +1,10 @@
 """Sensor platform for MSpa integration."""
 import logging
-from homeassistant.components.sensor import SensorEntity, SensorStateClass, SensorDeviceClass
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 from homeassistant.helpers.entity import EntityCategory
 
 from .const import DOMAIN
-from .entity import MSpaEntity
+from .entity import MSpaSensorEntity, MSpaBinarySensorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +49,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(diagnostic_sensors)
 
 
-class MSpaSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
+class MSpaSensor(MSpaSensorEntity):
     def __init__(self, coordinator, key):
         super().__init__(coordinator)
 
@@ -89,7 +87,7 @@ class MSpaSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
 # The entity is used to provide diagnostic information about the MSpa system.
 # It can be used to monitor the status of the MSpa system and troubleshoot issues.
 # The entity is not intended for user interaction, but rather for monitoring and diagnostics.
-class MSpaDiagnosticSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
+class MSpaDiagnosticSensor(MSpaSensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
@@ -118,7 +116,7 @@ class MSpaDiagnosticSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
 # Otherwise, it indicates a fault condition.
 # The icon changes based on the fault state.
 class MSpaFaultSensor(MSpaDiagnosticSensor):
-    _attr_name = "Fault"
+    name = "Fault"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator):
@@ -139,7 +137,7 @@ class MSpaFaultSensor(MSpaDiagnosticSensor):
 # Otherwise, it indicates that the filter is OK.
 # python
 class MSpaFilterSensor(MSpaDiagnosticSensor):
-    _attr_name = "Filter status"
+    name = "Filter status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator):
@@ -155,8 +153,8 @@ class MSpaFilterSensor(MSpaDiagnosticSensor):
     def icon(self):
         return "mdi:filter-remove" if self.state == "Dirty" else "mdi:filter"
 
-class MSpaHeaterTimerBinarySensor(CoordinatorEntity, MSpaEntity, BinarySensorEntity):
-    _attr_name = "Heater timer"
+class MSpaHeaterTimerBinarySensor(MSpaBinarySensorEntity):
+    name = "Heater timer"
 
     def __init__(self, coordinator):
         super().__init__(coordinator)
@@ -171,8 +169,8 @@ class MSpaHeaterTimerBinarySensor(CoordinatorEntity, MSpaEntity, BinarySensorEnt
     def icon(self):
         return "mdi:timer-outline" if self.is_on else "mdi:timer-off-outline"
 
-class MSpaHeaterTimerTimeSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
-    _attr_name = "Heater timer remaining"
+class MSpaHeaterTimerTimeSensor(MSpaSensorEntity):
+    name = "Heater timer remaining"
     _attr_native_unit_of_measurement = "h"
     _attr_state_class = SensorStateClass.MEASUREMENT
 

@@ -50,21 +50,17 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
 
 
     async def async_request_refresh(self) -> None:
-        # async with self._update_lock:
-        #     await asyncio.sleep(10)  # Wait for 10 seconds before proceeding so that any pending commands will have time to complete
         await super().async_request_refresh()
-
-    async def async_delay_request_refresh(self) -> None:
-        # async with self._update_lock:
-        await asyncio.sleep(10)  # Wait for 10 seconds before proceeding so that any pending commands will have time to complete
-        await self.async_request_refresh()
 
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via direct function call."""
         try:
-            # async with self._update_lock:
-            # Directly call the hot_tub status function
-            status_data = await self.api.get_hot_tub_status()
+            # Use cached status if available
+            if self.api._last_status is not None:
+                status_data = self.api._last_status
+                self.api._last_status = None  # Clear after use
+            else:
+                status_data = await self.api.get_hot_tub_status()
 
             fault_value = status_data.get("fault", "")
             transformed_data = {
@@ -99,7 +95,6 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             }
 
             self._last_data = transformed_data
-            _LOGGER.debug("Fetched MSpa status_data: %s", status_data)
             _LOGGER.debug("Fetched MSpa transformed data: %s", transformed_data)
             return transformed_data
 
@@ -127,7 +122,6 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             numerical_state = 1 if state.lower() == "on" else 0
             api_method = getattr(self.api, self.FEATURE_API_MAP[feature])
             await api_method(numerical_state)
-            await self.async_delay_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set %s to %s: %s", feature, state, str(err))
             raise
@@ -138,7 +132,6 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             temperature = service.data.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Setting temperature to %s", temperature)
             await self.api.set_temperature_setting(temperature)
-            await self.async_delay_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set temperature: %s", str(err))
             raise
@@ -150,7 +143,6 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Setting bubble state to %s", bubble_state)
             numerical_state = 1 if bubble_state.lower() == "on" else 0
             await self.api.set_bubble_state(numerical_state, self._last_data.get("bubble_level", 1))
-            await self.async_delay_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set bubble state: %s", str(err))
             raise
@@ -160,7 +152,6 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             bubble_level = service.data.get("level")
             _LOGGER.debug("Setting bubble level to %s", bubble_level)
             await self.api.set_bubble_level(bubble_level)
-            await self.async_delay_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set bubble level: %s", str(err))
             raise
