@@ -86,19 +86,19 @@ some entities for monitoring and controlling it .
      - `switch.mspa_hot_tub_filter`: To control the filtration system.
      - `sensor.mspa_hot_tub_fault`: To monitor the current fault status.
 
-## Enabling the Filter state Sensor
+## Enabling the Filter status Sensor
 
-If your MSpa device supports filter status monitoring, a `Filter state` sensor will be available in Home Assistant after installing or upgrading this integration.  
+If your MSpa device supports filter status monitoring, a `Filter status` sensor will be available in Home Assistant after installing or upgrading this integration.  
 By default, diagnostic sensors like the Filter state sensor are disabled in the entity registry. It should state in
-the manual for your mspa whether your mspa supports filter state monitoring.
+the manual for your mspa whether your mspa supports filter status monitoring.
 
 To enable it:
 
 1. Go to **Settings** > **Devices & Services** > **Entities** in Home Assistant.
-2. Search for `Filter state` under your MSpa device.
-3. Click the Filter sensor and enable it.
+2. Search for `Filter status` under your MSpa device.
+3. Click the `Filter status` sensor and enable it.
 
-The Filter state sensor will show `OK` when the filter is clean, and `Dirty` if the filter needs to be changed (when the warning code is `A0`).
+The Filter status sensor will show `OK` when the filter is clean, and `Dirty` if the filter needs to be changed (when the warning code is `A0`).
 
 ## Thermostat popup
 
