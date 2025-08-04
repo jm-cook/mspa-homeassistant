@@ -54,8 +54,10 @@ class MSpaClimate(MSpaClimateEntity):
     @property
     def hvac_action(self):
         heat_state = self.coordinator.last_data.get("heat_state")
-        if heat_state in (2, 3):
-             return HVACAction.HEATING
+        if heat_state == 2:
+            return HVACAction.PREHEATING  # You may need to define this if not present
+        if heat_state == 3:
+            return HVACAction.HEATING
         if heat_state == 4:
             return HVACAction.IDLE
         return HVACAction.OFF
