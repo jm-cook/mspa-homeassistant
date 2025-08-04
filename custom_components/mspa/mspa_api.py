@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import time
 import random
@@ -33,6 +34,7 @@ class MSpaApiClient:
         self.model = None
         self.software_version = None
         self.product_pic_url = None
+        self._last_status = None
 
     async def async_init(self):
         device_list = await self.get_device_list()
@@ -122,8 +124,6 @@ class MSpaApiClient:
 
     async def send_device_command(self, desired_dict, retry=False):
         _LOGGER.debug("send_device_command: %s, retry %s", desired_dict, retry)
-        # if (desired_dict.get("filter_state") == 0):
-        #     await self.set_heater_state(0)
         token = self.get_former_token()
         nonce = self.generate_nonce()
         ts = self.current_ts()
@@ -154,11 +154,25 @@ class MSpaApiClient:
         response = response.json()
         if (response.get('message') != 'SUCCESS') and (not retry):
             token = await self.authenticate()
-            return await self.send_device_command(desired_dict, True)
+            return await self.send_device_command(desired_dict, True, expected_state)
+
+        # Poll for expected state if provided
+        for _ in range(5):
+            await asyncio.sleep(3)
+            status = await self.get_hot_tub_status()
+            if all(status.get(k) == v for k, v in desired_dict.items()):
+                self._last_status = status  # Cache latest status
+                break
 
         if (desired_dict.get("filter_state")) == 0:
             self.set_heater_state(0)
+
+        # Trigger coordinator refresh after command completes
+        await self.coordinator.async_request_refresh()
+
         return response
+
+
 
     async def set_heater_state(self, state: int):
         return await self.send_device_command({"heater_state": state})

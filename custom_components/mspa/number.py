@@ -1,10 +1,7 @@
 import logging
 
-from homeassistant.components.number import NumberEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
 from .const import DOMAIN
-from .entity import MSpaEntity
+from .entity import MSpaNumberEntity, MSpaBaseEntity
 from .coordinator import MSpaUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,7 +11,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     coordinator: MSpaUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([MspaBubbleLevelNumber(coordinator)])
 
-class MspaBubbleLevelNumber(CoordinatorEntity, MSpaEntity, NumberEntity):
+class MspaBubbleLevelNumber(MSpaNumberEntity):
     """Representation of the MSpa bubble level number entity."""
 
     name = "Bubble Level"
