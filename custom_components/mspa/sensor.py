@@ -1,6 +1,7 @@
 """Sensor platform for MSpa integration."""
 import logging
 from homeassistant.components.sensor import SensorEntity, SensorStateClass, SensorDeviceClass
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import EntityCategory
 
@@ -40,6 +41,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
     async_add_entities([MSpaFaultSensor(coordinator)], update_before_add=True)
     async_add_entities([MSpaFilterSensor(coordinator)], update_before_add=True)
+    async_add_entities([MSpaHeaterTimerBinarySensor(coordinator)], update_before_add=True)
+    async_add_entities([MSpaHeaterTimerTimeSensor(coordinator)], update_before_add=True)
 
     diagnostic_sensors = [
         MSpaDiagnosticSensor(coordinator, key, f"{key.replace('_', ' ').title()}")
@@ -151,3 +154,33 @@ class MSpaFilterSensor(MSpaDiagnosticSensor):
     @property
     def icon(self):
         return "mdi:filter-remove" if self.state == "Dirty" else "mdi:filter"
+
+class MSpaHeaterTimerBinarySensor(CoordinatorEntity, MSpaEntity, BinarySensorEntity):
+    _attr_name = "Heater timer"
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_unique_id = f"mspa_heater_timer_enabled_{getattr(coordinator, 'device_id', 'unknown')}"
+        self._attr_device_info = self.device_info
+
+    @property
+    def is_on(self):
+        return bool(self.coordinator._last_data.get("heat_time_switch", 0))
+
+    @property
+    def icon(self):
+        return "mdi:timer-outline" if self.is_on else "mdi:timer-off-outline"
+
+class MSpaHeaterTimerTimeSensor(CoordinatorEntity, MSpaEntity, SensorEntity):
+    _attr_name = "Heater timer remaining"
+    _attr_native_unit_of_measurement = "h"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_unique_id = f"mspa_heater_timer_remaining_{getattr(coordinator, 'device_id', 'unknown')}"
+        self._attr_device_info = self.device_info
+
+    @property
+    def native_value(self):
+        return self.coordinator._last_data.get("heat_time", 0)
