@@ -116,10 +116,11 @@ The climate entity will show the following states:
 
 ![img.png](img/img7.png)
 
-## Note
+## Limitations
 
-There are some limitations to this integration:
+- **Regional Restriction:** The integration currently only works with MSPA installations in the European region. Installations outside Europe are not supported at this time.
 - It is not currently possible to determine which features your specific MSPA hot tub supports. If you find that some features, such as jet or ozone, do not work, it may be due to the specific model of your hot tub. You can disable the relevant entities in the Home Assistant UI.
+- The safety lock feature is not available in this integration. You can still operate the safety lock through the MSPA Link app.
 
 
 ## Troubleshooting
