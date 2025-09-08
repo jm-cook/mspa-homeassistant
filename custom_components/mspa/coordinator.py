@@ -14,8 +14,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    __version__,
+    DEFAULT_SCAN_INTERVAL
 )
 
 from homeassistant.const import ATTR_STATE, ATTR_TEMPERATURE
@@ -96,7 +95,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             }
 
             self._last_data = transformed_data
-            _LOGGER.debug("Fetched MSpa transformed data (version %s): %s", __version__, transformed_data)
+            _LOGGER.debug("Fetched MSpa transformed data: %s", transformed_data)
             return transformed_data
 
         except Exception as err:
