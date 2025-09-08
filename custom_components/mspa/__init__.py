@@ -4,7 +4,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, __version__
 from .coordinator import MSpaUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,16 +41,16 @@ def _unregister_services(hass):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up MSpa from a config entry."""
-    # _LOGGER.setLevel(logging.DEBUG)
+    _LOGGER.debug("Initializing MSpa integration version %s", __version__)
     coordinator = MSpaUpdateCoordinator(hass, entry)
     await coordinator.api.async_init()
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    _LOGGER.debug("MSpa integration %s setup %s %s", DOMAIN, entry.title, entry.entry_id)
+    _LOGGER.debug("MSpa integration %s setup %s %s (version %s)", DOMAIN, entry.title, entry.entry_id, __version__)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    _LOGGER.debug("MSpa coordinator set up and initial data fetched")
+    _LOGGER.debug("MSpa coordinator set up and initial data fetched (version %s)", __version__)
 
     _register_services(hass, coordinator)
     _LOGGER.info("MSpa integration %s setup complete", DOMAIN)
