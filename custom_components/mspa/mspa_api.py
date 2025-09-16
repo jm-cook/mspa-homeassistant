@@ -154,7 +154,7 @@ class MSpaApiClient:
         response = response.json()
         if (response.get('message') != 'SUCCESS') and (not retry):
             token = await self.authenticate()
-            return await self.send_device_command(desired_dict, True, expected_state)
+            return await self.send_device_command(desired_dict, True)
 
         # Poll for expected state if provided
         for _ in range(5):
@@ -165,7 +165,7 @@ class MSpaApiClient:
                 break
 
         if (desired_dict.get("filter_state")) == 0:
-            self.set_heater_state(0)
+            await self.set_heater_state(0)
 
         # Trigger coordinator refresh after command completes
         await self.coordinator.async_request_refresh()
@@ -258,4 +258,3 @@ class MSpaApiClient:
         data = response["data"]
         _LOGGER.debug("get_device_list %s", data)
         return data
-

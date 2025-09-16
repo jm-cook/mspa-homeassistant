@@ -50,33 +50,18 @@ create a guest account on the MSPA Link app to avoid using your main account cre
 to create a guest account: [Creating a Guest Account in the MSPA Link App](MSPA_LINK.md).
 
 To configure the MSPA integration in Home Assistant:
+
 1. Go to **Settings** > **Devices & Services**.
 2. Click on **Add Integration**.
 3. Search for **mspa** and select it.
 4. Enter the required information:
-   - `email`: Your guest email for the MSPA account.
-   - `password`: The MSPA account password for the guest user.
+    - `email`: Your guest email for the MSPA account.
+    - `password`: The MSPA account password for the guest user.
 
-   ![img.png](img/img3.png)
-
+    ![img.png](img/img3.png)
 
 5. Click **Submit** to complete the configuration.
-6. You can now control your MSPA hot tub through Home Assistant.
-
-
-
-
-If the registration is successful then you will see your device and 
-some entities for monitoring and controlling it .
-
-## Integration page
-
-![img.png](img/img6.png)
-
-## Device page
-
-![img.png](img/img.png)
-
+6. If the registration is successful, you will see your device and some entities for monitoring and controlling it.
 7. You can now add the entities to your dashboard or use them in automations.
 
    - **Example Entities:**
@@ -85,6 +70,14 @@ some entities for monitoring and controlling it .
      - `switch.mspa_hot_tub_bubbles`: To control the bubbles.
      - `switch.mspa_hot_tub_filter`: To control the filtration system.
      - `sensor.mspa_hot_tub_fault`: To monitor the current fault status.
+
+## Integration page
+
+![img.png](img/img6.png)
+
+## Device page
+
+![img.png](img/img.png)
 
 ## Enabling the Filter status Sensor
 
