@@ -20,7 +20,6 @@ DIAGNOSTIC_KEYS = [
     "warning", "device_heat_perhour"
 ]
 
-
 MEASUREMENT_KEYS = {
     "temperature_unit",
     "filter_current",
@@ -42,7 +41,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([MSpaFilterSensor(coordinator)], update_before_add=True)
     async_add_entities([MSpaHeaterTimerBinarySensor(coordinator)], update_before_add=True)
     async_add_entities([MSpaHeaterTimerTimeSensor(coordinator)], update_before_add=True)
-    async_add_entities([MSpaHeaterPowerSensor(coordinator)], update_before_add=True)
+    # Pass the config entry so the heater power sensor can read per-device options
+    async_add_entities([MSpaHeaterPowerSensor(coordinator, entry)], update_before_add=True)
 
     diagnostic_sensors = [
         MSpaDiagnosticSensor(coordinator, key, f"{key.replace('_', ' ').title()}")
@@ -116,7 +116,6 @@ class MSpaDiagnosticSensor(MSpaSensorEntity):
 # It checks the "fault" key in the coordinator's last data.
 # If the fault is "OK", it indicates no issues.
 # Otherwise, it indicates a fault condition.
-# The icon changes based on the fault state.
 class MSpaFaultSensor(MSpaDiagnosticSensor):
     name = "Fault"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -137,7 +136,6 @@ class MSpaFaultSensor(MSpaDiagnosticSensor):
 # It checks the "warning" key in the coordinator's last data.
 # If the warning is "A0", it indicates that the filter is dirty.
 # Otherwise, it indicates that the filter is OK.
-# python
 class MSpaFilterSensor(MSpaDiagnosticSensor):
     name = "Filter status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -186,46 +184,51 @@ class MSpaHeaterTimerTimeSensor(MSpaSensorEntity):
         return self.coordinator._last_data.get("heat_time", 0)
 
 class MSpaHeaterPowerSensor(MSpaSensorEntity):
-    """Sensor to report current heater power consumption based on heat state."""
+    """Sensor to report current heater power consumption based on heat state and per-device options."""
     name = "Heater Power"
     _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_device_class = SensorDeviceClass.POWER
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator, config_entry):
         super().__init__(coordinator)
         self._attr_unique_id = f"mspa_heater_power_{getattr(coordinator, 'device_id', 'unknown')}"
         self._attr_device_info = self.device_info
+        self._config_entry = config_entry
+
+    def _get_option_int(self, key: str, default: int) -> int:
+        opts = getattr(self._config_entry, "options", {}) or {}
+        val = opts.get(key, default)
+        try:
+            ival = int(val)
+            if ival < 0:
+                raise ValueError
+            return ival
+        except (TypeError, ValueError):
+            return default
 
     @property
     def native_value(self):
-        """Return the power consumption based on heat state.
-        
-        Heat state values:
-        - 2: Preheat (1500W)
-        - 3: Heat (2000W)
-        - 4: Idle (0W)
-        """
+        """Return the power consumption based on heat state using per-device options."""
         heat_state = self.coordinator._last_data.get("heat_state")
         heater_on = self.coordinator._last_data.get("heater") == "on"
-        
-        # Only report power consumption if heater is on
+
         if not heater_on:
             return 0
-            
+
+        preheat_w = self._get_option_int("heater_power_preheat", 1500)
+        heat_w = self._get_option_int("heater_power_heat", 2000)
+
         if heat_state == 2:
-            return 1500  # Preheat: 1500W
+            return preheat_w
         elif heat_state == 3:
-            return 2000  # Heat: 2000W
+            return heat_w
         elif heat_state == 4:
-            return 0     # Idle: 0W
+            return 0
         else:
-            return 0     # Unknown state: 0W
+            return 0
 
     @property
     def icon(self):
-        """Return icon based on power state."""
         power = self.native_value
-        if power > 0:
-            return "mdi:lightning-bolt"
-        return "mdi:power-plug-off"
+        return "mdi:lightning-bolt" if power > 0 else "mdi:power-plug-off"
