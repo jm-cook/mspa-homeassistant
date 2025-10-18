@@ -42,3 +42,31 @@ class MSpaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         })
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
+    # Hook the options flow for per-device settings
+    def async_get_options_flow(self, entry):
+        return OptionsFlowHandler(entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Options flow for per-device heater power settings."""
+
+    def __init__(self, config_entry):
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        if user_input is not None:
+            # Save options and return
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema({
+            vol.Optional(
+                "heater_power_preheat",
+                default=self.config_entry.options.get("heater_power_preheat", 1500),
+            ): vol.All(int, vol.Range(min=0)),
+            vol.Optional(
+                "heater_power_heat",
+                default=self.config_entry.options.get("heater_power_heat", 2000),
+            ): vol.All(int, vol.Range(min=0)),
+        })
+
+        return self.async_show_form(step_id="init", data_schema=data_schema)
