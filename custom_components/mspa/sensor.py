@@ -2,6 +2,7 @@
 import logging
 from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import UnitOfPower
 
 from .const import DOMAIN
 from .entity import MSpaSensorEntity, MSpaBinarySensorEntity
@@ -41,6 +42,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([MSpaFilterSensor(coordinator)], update_before_add=True)
     async_add_entities([MSpaHeaterTimerBinarySensor(coordinator)], update_before_add=True)
     async_add_entities([MSpaHeaterTimerTimeSensor(coordinator)], update_before_add=True)
+    async_add_entities([MSpaHeaterPowerSensor(coordinator)], update_before_add=True)
 
     diagnostic_sensors = [
         MSpaDiagnosticSensor(coordinator, key, f"{key.replace('_', ' ').title()}")
@@ -182,3 +184,48 @@ class MSpaHeaterTimerTimeSensor(MSpaSensorEntity):
     @property
     def native_value(self):
         return self.coordinator._last_data.get("heat_time", 0)
+
+class MSpaHeaterPowerSensor(MSpaSensorEntity):
+    """Sensor to report current heater power consumption based on heat state."""
+    name = "Heater Power"
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.POWER
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_unique_id = f"mspa_heater_power_{getattr(coordinator, 'device_id', 'unknown')}"
+        self._attr_device_info = self.device_info
+
+    @property
+    def native_value(self):
+        """Return the power consumption based on heat state.
+        
+        Heat state values:
+        - 2: Preheat (1500W)
+        - 3: Heat (2000W)
+        - 4: Idle (0W)
+        """
+        heat_state = self.coordinator._last_data.get("heat_state")
+        heater_on = self.coordinator._last_data.get("heater") == "on"
+        
+        # Only report power consumption if heater is on
+        if not heater_on:
+            return 0
+            
+        if heat_state == 2:
+            return 1500  # Preheat: 1500W
+        elif heat_state == 3:
+            return 2000  # Heat: 2000W
+        elif heat_state == 4:
+            return 0     # Idle: 0W
+        else:
+            return 0     # Unknown state: 0W
+
+    @property
+    def icon(self):
+        """Return icon based on power state."""
+        power = self.native_value
+        if power > 0:
+            return "mdi:lightning-bolt"
+        return "mdi:power-plug-off"
