@@ -37,12 +37,30 @@ class MSpaApiClient:
         self._last_status = None
 
     async def async_init(self):
+        _LOGGER.info("DIAGNOSTIC: Starting MSpaApiClient initialization")
         device_list = await self.get_device_list()
-        _LOGGER.debug("device_list: %s", device_list)
+        _LOGGER.info("DIAGNOSTIC: device_list result: %s", device_list)
+
         if not device_list:
+            _LOGGER.error("DIAGNOSTIC: device_list is None or empty!")
             _LOGGER.error("No devices found. Please check your credentials and network connection.")
             raise RuntimeError("MSpaApiClient initialization failed: No devices found.")
+
+        if not isinstance(device_list, dict):
+            _LOGGER.error("DIAGNOSTIC: device_list is not a dict! Type: %s, Value: %s", type(device_list), device_list)
+            raise RuntimeError("MSpaApiClient initialization failed: Unexpected device_list format.")
+
+        if "list" not in device_list:
+            _LOGGER.error("DIAGNOSTIC: 'list' key not found in device_list! Keys: %s", device_list.keys())
+            raise RuntimeError("MSpaApiClient initialization failed: No 'list' in device_list.")
+
         devices = device_list["list"]
+
+        if not devices or len(devices) == 0:
+            _LOGGER.error("DIAGNOSTIC: Device list is empty! Full device_list: %s", device_list)
+            raise RuntimeError("MSpaApiClient initialization failed: Device list is empty.")
+
+        _LOGGER.info("DIAGNOSTIC: Found %d device(s). First device: %s", len(devices), devices[0])
         self.product_id = devices[0]["product_id"] if "product_id" in devices[0] else None
         self.device_id = devices[0]["device_id"] if "device_id" in devices[0] else None
         self.series = devices[0]["product_series"] if "product_series" in devices[0] else None
@@ -110,17 +128,38 @@ class MSpaApiClient:
             "country": ""
         }
         token_request_url = "https://api.iot.the-mspa.com/api/enduser/get_token/"
-        response = await self.hass.async_add_executor_job(
-            functools.partial(requests.post, token_request_url, headers=headers, json=payload)
-        )
-        response = response.json()
-        token = response.get("data", {}).get("token")
-        _LOGGER.debug("authenticate response: %s", response)
-        if token is not None:
-            self.set_token_in_hass(token)
-            return token
-        else:
-            return self.get_token_from_hass()
+
+        _LOGGER.info("DIAGNOSTIC: Attempting authentication to %s", token_request_url)
+        _LOGGER.info("DIAGNOSTIC: Account email: %s", self.account_email)
+
+        try:
+            response = await self.hass.async_add_executor_job(
+                functools.partial(requests.post, token_request_url, headers=headers, json=payload, timeout=30)
+            )
+            _LOGGER.info("DIAGNOSTIC: Authentication HTTP status code: %s", response.status_code)
+            _LOGGER.info("DIAGNOSTIC: Authentication raw response: %s", response.text)
+
+            response_json = response.json()
+            _LOGGER.info("DIAGNOSTIC: Authentication parsed response: %s", response_json)
+
+            token = response_json.get("data", {}).get("token")
+            if token is not None:
+                _LOGGER.info("DIAGNOSTIC: Token successfully received (length: %d)", len(token))
+                self.set_token_in_hass(token)
+                return token
+            else:
+                _LOGGER.warning("DIAGNOSTIC: No token in response. Response data: %s", response_json.get("data"))
+                _LOGGER.warning("DIAGNOSTIC: Full response: %s", response_json)
+                return self.get_token_from_hass()
+        except requests.exceptions.Timeout:
+            _LOGGER.error("DIAGNOSTIC: Authentication request timed out after 30 seconds")
+            raise
+        except requests.exceptions.ConnectionError as e:
+            _LOGGER.error("DIAGNOSTIC: Connection error during authentication: %s", str(e))
+            raise
+        except Exception as e:
+            _LOGGER.error("DIAGNOSTIC: Unexpected error during authentication: %s", str(e), exc_info=True)
+            raise
 
     async def send_device_command(self, desired_dict, retry=False):
         _LOGGER.debug("send_device_command: %s, retry %s", desired_dict, retry)
@@ -248,13 +287,40 @@ class MSpaApiClient:
         }
         url = "https://api.iot.the-mspa.com/api/enduser/devices/"
 
-        response = await self.hass.async_add_executor_job(
-            functools.partial(requests.get, url, headers=headers)
-        )
-        response = response.json()
-        if not response.get("data") and not retry:
-            await self.authenticate()
-            return await self.get_device_list(True)
-        data = response["data"]
-        _LOGGER.debug("get_device_list %s", data)
-        return data
+        _LOGGER.info("DIAGNOSTIC: Attempting to get device list from %s (retry=%s)", url, retry)
+        _LOGGER.info("DIAGNOSTIC: Using token (first 20 chars): %s...", self.get_former_token()[:20] if self.get_former_token() else "None")
+
+        try:
+            response = await self.hass.async_add_executor_job(
+                functools.partial(requests.get, url, headers=headers, timeout=30)
+            )
+            _LOGGER.info("DIAGNOSTIC: Device list HTTP status code: %s", response.status_code)
+            _LOGGER.info("DIAGNOSTIC: Device list raw response: %s", response.text)
+
+            response_json = response.json()
+            _LOGGER.info("DIAGNOSTIC: Device list parsed response: %s", response_json)
+
+            if not response_json.get("data") and not retry:
+                _LOGGER.warning("DIAGNOSTIC: No data in device list response, re-authenticating...")
+                await self.authenticate()
+                return await self.get_device_list(True)
+
+            data = response_json["data"]
+            device_count = len(data.get("list", [])) if isinstance(data, dict) else 0
+            _LOGGER.info("DIAGNOSTIC: Device list returned successfully. Number of devices: %d", device_count)
+
+            if device_count == 0:
+                _LOGGER.error("DIAGNOSTIC: Device list is empty! Full data structure: %s", data)
+            else:
+                _LOGGER.info("DIAGNOSTIC: First device info: %s", data.get("list", [])[0] if data.get("list") else "No list key")
+
+            return data
+        except requests.exceptions.Timeout:
+            _LOGGER.error("DIAGNOSTIC: Device list request timed out after 30 seconds")
+            raise
+        except requests.exceptions.ConnectionError as e:
+            _LOGGER.error("DIAGNOSTIC: Connection error getting device list: %s", str(e))
+            raise
+        except Exception as e:
+            _LOGGER.error("DIAGNOSTIC: Unexpected error getting device list: %s", str(e), exc_info=True)
+            raise
