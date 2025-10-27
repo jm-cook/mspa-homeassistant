@@ -27,7 +27,9 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, config_entry: Dict[str, Any]) -> None:
         """Initialize."""
-        _LOGGER.debug(f"MSpaUpdateCoordinator initializing {config_entry.data}")
+        # Obfuscate password for logging
+        safe_data = {k: (v if k != "password" else "***") for k, v in config_entry.data.items()}
+        _LOGGER.debug(f"MSpaUpdateCoordinator initializing {safe_data}")
         super().__init__(
             hass,
             _LOGGER,

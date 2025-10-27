@@ -100,6 +100,25 @@ class MSpaApiClient:
         self.hass.data["mspa_token"] = token
         self._token = token
 
+    def _obfuscate_response(self, response_data):
+        """Recursively obfuscate email addresses in response data for logging."""
+        if not self.account_email:
+            return response_data
+
+        # Create email obfuscation
+        email_parts = self.account_email.split("@")
+        if len(email_parts) == 2 and email_parts[0]:
+            obfuscated = f"{email_parts[0][:3]}***@{email_parts[1]}"
+        else:
+            obfuscated = "***"
+
+        # Convert to JSON string, replace email, then parse back
+        import copy
+        safe_data = copy.deepcopy(response_data)
+        data_str = json.dumps(safe_data)
+        data_str = data_str.replace(self.account_email, obfuscated)
+        return json.loads(data_str)
+
 
     async def authenticate(self):
         nonce = self.generate_nonce()
@@ -130,17 +149,23 @@ class MSpaApiClient:
         token_request_url = "https://api.iot.the-mspa.com/api/enduser/get_token/"
 
         _LOGGER.info("DIAGNOSTIC: Attempting authentication to %s", token_request_url)
-        _LOGGER.info("DIAGNOSTIC: Account email: %s", self.account_email)
+        # Obfuscate email for privacy
+        email_parts = self.account_email.split("@") if self.account_email else ["", ""]
+        obfuscated_email = f"{email_parts[0][:3]}***@{email_parts[1]}" if len(email_parts) == 2 and email_parts[0] else "***"
+        _LOGGER.info("DIAGNOSTIC: Account email: %s", obfuscated_email)
 
         try:
             response = await self.hass.async_add_executor_job(
                 functools.partial(requests.post, token_request_url, headers=headers, json=payload, timeout=30)
             )
             _LOGGER.info("DIAGNOSTIC: Authentication HTTP status code: %s", response.status_code)
-            _LOGGER.info("DIAGNOSTIC: Authentication raw response: %s", response.text)
 
             response_json = response.json()
-            _LOGGER.info("DIAGNOSTIC: Authentication parsed response: %s", response_json)
+
+            # Obfuscate sensitive data in response for logging
+            safe_response = self._obfuscate_response(response_json)
+            _LOGGER.info("DIAGNOSTIC: Authentication raw response: %s", response.text.replace(self.account_email, obfuscated_email) if self.account_email in response.text else response.text)
+            _LOGGER.info("DIAGNOSTIC: Authentication parsed response: %s", safe_response)
 
             token = response_json.get("data", {}).get("token")
             if token is not None:
