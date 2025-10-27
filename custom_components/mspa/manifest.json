@@ -18,6 +18,6 @@
     "sensor",
     "climate"
   ],
-  "version": "v1.0.11-beta",
+  "version": "1.0.11-beta.2",
   "single_config_entry": true
 }
