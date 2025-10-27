@@ -27,8 +27,18 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, config_entry: Dict[str, Any]) -> None:
         """Initialize."""
-        # Obfuscate password for logging
-        safe_data = {k: (v if k != "password" else "***") for k, v in config_entry.data.items()}
+        # Obfuscate sensitive data for logging
+        def obfuscate_value(key, value):
+            if key == "password":
+                return "***"
+            elif key == "account_email" and value:
+                parts = value.split("@")
+                if len(parts) == 2 and parts[0]:
+                    return f"{parts[0][:3]}***@{parts[1]}"
+                return "***"
+            return value
+
+        safe_data = {k: obfuscate_value(k, v) for k, v in config_entry.data.items()}
         _LOGGER.debug(f"MSpaUpdateCoordinator initializing {safe_data}")
         super().__init__(
             hass,
