@@ -23,12 +23,22 @@ class MSpaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Validate the credentials here
             # For now, we'll just accept them
             # When creating the config entry
-            _LOGGER.debug("User input: %s", user_input)
+
+            # Obfuscate for logging
+            email_parts = user_input[CONF_EMAIL].split("@")
+            obfuscated_email = f"{email_parts[0][:3]}***@{email_parts[1]}" if len(email_parts) == 2 else "***"
+            _LOGGER.debug("User input: {'email': '%s', 'password': '%s'}", obfuscated_email, "*" * len(user_input[CONF_PASSWORD]))
+
+            # Generate MD5 hash
+            password_hash = hashlib.md5(user_input[CONF_PASSWORD].encode("utf-8")).hexdigest()
+            _LOGGER.info("DIAGNOSTIC: Generated MD5 hash length: %d, first 6 chars: %s", len(password_hash), password_hash[:6])
+            _LOGGER.info("DIAGNOSTIC: Original password length: %d", len(user_input[CONF_PASSWORD]))
+
             return self.async_create_entry(
                 title="MSpa Hot Tub",
                 data={
                     "account_email": user_input[CONF_EMAIL],
-                    "password": hashlib.md5(user_input[CONF_PASSWORD].encode("utf-8")).hexdigest(),
+                    "password": password_hash,
                     # "device_id": user_input[CONF_DEVICE_ID],
                     # "product_id": user_input[CONF_PRODUCT_ID],
                 }
