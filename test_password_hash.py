@@ -51,13 +51,16 @@ def test_password_encoding():
         import random
         import string
 
-        nonce = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+        nonce = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
         ts = str(int(time.time()))
-        app_id = "6b0f619b2f7f754e"
 
-        # Build signature
-        sign_string = f"account{email}app_id{app_id}nonce{nonce}password{password_hash}ts{ts}f0398da8a2a04ff1b19468df3d4a9f6c"
-        sign = hashlib.md5(sign_string.encode("utf-8")).hexdigest()
+        # Use the correct app_id and app_secret from mspa_api.py
+        app_id = "e1c8e068f9ca11eba4dc0242ac120002"
+        app_secret = "87025c9ecd18906d27225fe79cb68349"
+
+        # Build signature using the correct algorithm
+        sign_string = app_id + "," + app_secret + "," + nonce + "," + ts
+        sign = hashlib.md5(sign_string.encode("utf-8")).hexdigest().upper()
 
         headers = {
             "push_type": "Android",
