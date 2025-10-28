@@ -30,11 +30,20 @@ class MSpaApiClient:
 
         # Clear any existing cached token when creating a new API client
         # This ensures we don't reuse old tokens with new credentials
-        if "mspa_token" in hass.data:
+        # We also store the credentials hash to detect if they've changed
+        current_creds_hash = hashlib.md5(f"{account_email}:{password}".encode("utf-8")).hexdigest()
+        stored_creds_hash = hass.data.get("mspa_creds_hash")
+
+        if stored_creds_hash and stored_creds_hash != current_creds_hash:
+            _LOGGER.info("DIAGNOSTIC: Credentials have changed - clearing old token")
+            hass.data.pop("mspa_token", None)
+        elif "mspa_token" in hass.data:
             old_token = hass.data.get("mspa_token")
             if old_token:
-                _LOGGER.info("DIAGNOSTIC: Clearing previously cached token (first 20 chars: %s...)", old_token[:20] if len(old_token) >= 20 else old_token)
-            hass.data.pop("mspa_token", None)
+                _LOGGER.info("DIAGNOSTIC: Found cached token from previous session (first 20 chars: %s...), will validate it", old_token[:20] if len(old_token) >= 20 else old_token)
+
+        # Store the current credentials hash for future comparison
+        hass.data["mspa_creds_hash"] = current_creds_hash
 
         self._token = token
         self.product_id = None

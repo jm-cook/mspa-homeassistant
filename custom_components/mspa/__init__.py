@@ -63,9 +63,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id, None)
         _unregister_services(hass)
-        # Clear the cached token to prevent it from being reused with new credentials
+        # Clear the cached token and credentials hash to prevent reuse with new credentials
         if "mspa_token" in hass.data:
             _LOGGER.info("DIAGNOSTIC: Clearing cached authentication token on unload")
             hass.data.pop("mspa_token", None)
+        if "mspa_creds_hash" in hass.data:
+            _LOGGER.info("DIAGNOSTIC: Clearing cached credentials hash on unload")
+            hass.data.pop("mspa_creds_hash", None)
         _LOGGER.debug("MSpa integration %s unloaded successfully for entry %s", DOMAIN, entry.entry_id)
     return unload_ok
