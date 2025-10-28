@@ -26,8 +26,17 @@ class MSpaApiClient:
         self.app_id = app_id
         self.app_secret = app_secret
         self.hass = hass
-        self._token = token or self.get_token_from_hass()
         self.coordinator = coordinator
+
+        # Clear any existing cached token when creating a new API client
+        # This ensures we don't reuse old tokens with new credentials
+        if "mspa_token" in hass.data:
+            old_token = hass.data.get("mspa_token")
+            if old_token:
+                _LOGGER.info("DIAGNOSTIC: Clearing previously cached token (first 20 chars: %s...)", old_token[:20] if len(old_token) >= 20 else old_token)
+            hass.data.pop("mspa_token", None)
+
+        self._token = token
         self.product_id = None
         self.device_id = None
         self.series = None
@@ -153,6 +162,7 @@ class MSpaApiClient:
         email_parts = self.account_email.split("@") if self.account_email else ["", ""]
         obfuscated_email = f"{email_parts[0][:3]}***@{email_parts[1]}" if len(email_parts) == 2 and email_parts[0] else "***"
         _LOGGER.info("DIAGNOSTIC: Account email: %s", obfuscated_email)
+        _LOGGER.info("DIAGNOSTIC: Password hash length: %d, first 6 chars: %s", len(self.password), self.password[:6] if self.password else "None")
 
         try:
             response = await self.hass.async_add_executor_job(
@@ -173,6 +183,19 @@ class MSpaApiClient:
                 self.set_token_in_hass(token)
                 return token
             else:
+                # Check for specific error codes
+                error_code = response_json.get("code")
+                error_message = response_json.get("message", "")
+
+                if error_code == 16019 or "password" in error_message.lower():
+                    _LOGGER.error("DIAGNOSTIC: Password authentication failed!")
+                    _LOGGER.error("DIAGNOSTIC: API error code: %s, message: %s", error_code, error_message)
+                    _LOGGER.error("DIAGNOSTIC: Please verify:")
+                    _LOGGER.error("DIAGNOSTIC:   1. You are using the SAME password you use in the MSpa mobile app")
+                    _LOGGER.error("DIAGNOSTIC:   2. Your password does not contain special characters that might cause encoding issues")
+                    _LOGGER.error("DIAGNOSTIC:   3. Try resetting your password in the MSpa app and using a simple password (letters and numbers only)")
+                    raise RuntimeError(f"Authentication failed: {error_message}. Please check your password in the MSpa mobile app.")
+
                 _LOGGER.warning("DIAGNOSTIC: No token in response. Response data: %s", response_json.get("data"))
                 _LOGGER.warning("DIAGNOSTIC: Full response: %s", response_json)
                 return self.get_token_from_hass()
