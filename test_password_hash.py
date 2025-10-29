@@ -20,16 +20,32 @@ def test_password_encoding():
     print("=" * 60)
     print()
 
-    email = input("Enter your MSpa account email: ").strip()
-    password = getpass.getpass("Enter your MSpa password: ")
+    email_raw = input("Enter your MSpa account email: ")
+    password_raw = getpass.getpass("Enter your MSpa password: ")
+
+    # Strip whitespace (common issue from copy/paste)
+    email = email_raw.strip()
+    password = password_raw.strip()
 
     print()
     print("-" * 60)
     print("Password Analysis:")
     print("-" * 60)
     print(f"Email: {email}")
+
+    # Warn about whitespace
+    if len(email_raw) != len(email):
+        print(f"⚠️  WARNING: Email had {len(email_raw) - len(email)} leading/trailing space(s) - automatically removed")
+    if len(password_raw) != len(password):
+        print(f"⚠️  WARNING: Password had {len(password_raw) - len(password)} leading/trailing space(s) - automatically removed")
+        print(f"   This is a common issue when copy/pasting credentials!")
+
     print(f"Password length: {len(password)} characters")
     print(f"Password contains special chars: {any(not c.isalnum() for c in password)}")
+
+    if any(not c.isalnum() for c in password):
+        print(f"⚠️  NOTE: MSpa passwords should only contain letters and numbers (6-15 characters)")
+        print(f"   Special characters may cause issues!")
 
     # Generate MD5 hash
     password_hash = hashlib.md5(password.encode("utf-8")).hexdigest()

@@ -20,24 +20,34 @@ class MSpaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Validate the credentials here
-            # For now, we'll just accept them
-            # When creating the config entry
+            # Strip whitespace from email and password to prevent common user errors
+            # (trailing spaces from copy/paste, etc.)
+            email = user_input[CONF_EMAIL].strip()
+            password = user_input[CONF_PASSWORD].strip()
 
             # Obfuscate for logging
-            email_parts = user_input[CONF_EMAIL].split("@")
+            email_parts = email.split("@")
             obfuscated_email = f"{email_parts[0][:3]}***@{email_parts[1]}" if len(email_parts) == 2 else "***"
-            _LOGGER.debug("User input: {'email': '%s', 'password': '%s'}", obfuscated_email, "*" * len(user_input[CONF_PASSWORD]))
+
+            # Check for whitespace that was removed
+            if len(user_input[CONF_EMAIL]) != len(email):
+                _LOGGER.warning("DIAGNOSTIC: Email had leading/trailing whitespace - removed %d characters",
+                               len(user_input[CONF_EMAIL]) - len(email))
+            if len(user_input[CONF_PASSWORD]) != len(password):
+                _LOGGER.warning("DIAGNOSTIC: Password had leading/trailing whitespace - removed %d characters",
+                               len(user_input[CONF_PASSWORD]) - len(password))
+
+            _LOGGER.debug("User input: {'email': '%s', 'password': '%s'}", obfuscated_email, "*" * len(password))
 
             # Generate MD5 hash
-            password_hash = hashlib.md5(user_input[CONF_PASSWORD].encode("utf-8")).hexdigest()
+            password_hash = hashlib.md5(password.encode("utf-8")).hexdigest()
             _LOGGER.info("DIAGNOSTIC: Generated MD5 hash length: %d, first 6 chars: %s", len(password_hash), password_hash[:6])
-            _LOGGER.info("DIAGNOSTIC: Original password length: %d", len(user_input[CONF_PASSWORD]))
+            _LOGGER.info("DIAGNOSTIC: Original password length: %d", len(password))
 
             return self.async_create_entry(
                 title="MSpa Hot Tub",
                 data={
-                    "account_email": user_input[CONF_EMAIL],
+                    "account_email": email,
                     "password": password_hash,
                     # "device_id": user_input[CONF_DEVICE_ID],
                     # "product_id": user_input[CONF_PRODUCT_ID],
