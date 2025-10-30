@@ -67,6 +67,7 @@ To configure the MSPA integration in Home Assistant:
    - **Example Entities:**
      - `switch.mspa_hot_tub_heater`: To turn the hot tub on or off.
      - `sensor.mspa_hot_tub_water_temperature`: To monitor the current temperature.
+     - `sensor.mspa_hot_tub_heater_power`: To monitor the current power consumption.
      - `switch.mspa_hot_tub_bubbles`: To control the bubbles.
      - `switch.mspa_hot_tub_filter`: To control the filtration system.
      - `sensor.mspa_hot_tub_fault`: To monitor the current fault status.
@@ -100,6 +101,36 @@ The climate entity will show the following states:
 - `off`: The hot tub is turned off.
 - `idle`: The hot tub is on but not actively heating. This would normally be the state when the water is at or above the desired temperature.
 - `heating`: The hot tub is actively heating the water.
+
+## Heater Power Sensor
+
+The integration provides a `Heater Power` sensor that reports the current power consumption of the heater in watts. This sensor allows you to:
+- Monitor real-time power usage based on the heating state
+- Create energy consumption tracking using Home Assistant's built-in Riemann Sum Integral helper
+- Set up automations based on power consumption
+
+The sensor reports power consumption based on the heater state:
+- **Preheat mode**: 1500W
+- **Heating mode**: 2000W
+- **Idle mode**: 0W
+- **Heater off**: 0W
+
+### Creating an Energy Sensor
+
+To track total energy consumption, you can create a Riemann Sum Integral helper:
+
+1. Go to **Settings** > **Devices & Services** > **Helpers**
+2. Click **Create Helper** and select **Riemann sum integral**
+3. Configure the helper:
+   - **Input sensor**: Select your `Heater Power` sensor
+   - **Name**: Choose a name like "Hot Tub Energy"
+   - **Integration method**: Left
+   - **Precision**: 2
+   - **Metric prefix**: k (kilo)
+   - **Time unit**: Hours
+4. Click **Submit**
+
+This will create an energy sensor that shows total energy consumption in kWh, which you can add to your Energy dashboard or use in automations.
 
 ## Thermostat popup
 

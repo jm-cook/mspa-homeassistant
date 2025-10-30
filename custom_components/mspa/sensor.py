@@ -2,6 +2,7 @@
 import logging
 from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import UnitOfPower
 
 from .const import DOMAIN
 from .entity import MSpaSensorEntity, MSpaBinarySensorEntity
@@ -18,7 +19,6 @@ DIAGNOSTIC_KEYS = [
     "multimcuotainfo", "heat_time", "filter_life", "trdversion", "is_online",
     "warning", "device_heat_perhour"
 ]
-
 
 MEASUREMENT_KEYS = {
     "temperature_unit",
@@ -41,6 +41,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([MSpaFilterSensor(coordinator)], update_before_add=True)
     async_add_entities([MSpaHeaterTimerBinarySensor(coordinator)], update_before_add=True)
     async_add_entities([MSpaHeaterTimerTimeSensor(coordinator)], update_before_add=True)
+    # Pass the config entry so the heater power sensor can read per-device options
+    async_add_entities([MSpaHeaterPowerSensor(coordinator, entry)], update_before_add=True)
 
     diagnostic_sensors = [
         MSpaDiagnosticSensor(coordinator, key, f"{key.replace('_', ' ').title()}")
@@ -114,7 +116,6 @@ class MSpaDiagnosticSensor(MSpaSensorEntity):
 # It checks the "fault" key in the coordinator's last data.
 # If the fault is "OK", it indicates no issues.
 # Otherwise, it indicates a fault condition.
-# The icon changes based on the fault state.
 class MSpaFaultSensor(MSpaDiagnosticSensor):
     name = "Fault"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -135,7 +136,6 @@ class MSpaFaultSensor(MSpaDiagnosticSensor):
 # It checks the "warning" key in the coordinator's last data.
 # If the warning is "A0", it indicates that the filter is dirty.
 # Otherwise, it indicates that the filter is OK.
-# python
 class MSpaFilterSensor(MSpaDiagnosticSensor):
     name = "Filter status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -182,3 +182,53 @@ class MSpaHeaterTimerTimeSensor(MSpaSensorEntity):
     @property
     def native_value(self):
         return self.coordinator._last_data.get("heat_time", 0)
+
+class MSpaHeaterPowerSensor(MSpaSensorEntity):
+    """Sensor to report current heater power consumption based on heat state and per-device options."""
+    name = "Heater Power"
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.POWER
+
+    def __init__(self, coordinator, config_entry):
+        super().__init__(coordinator)
+        self._attr_unique_id = f"mspa_heater_power_{getattr(coordinator, 'device_id', 'unknown')}"
+        self._attr_device_info = self.device_info
+        self._config_entry = config_entry
+
+    def _get_option_int(self, key: str, default: int) -> int:
+        opts = getattr(self._config_entry, "options", {}) or {}
+        val = opts.get(key, default)
+        try:
+            ival = int(val)
+            if ival < 0:
+                raise ValueError
+            return ival
+        except (TypeError, ValueError):
+            return default
+
+    @property
+    def native_value(self):
+        """Return the power consumption based on heat state using per-device options."""
+        heat_state = self.coordinator._last_data.get("heat_state")
+        heater_on = self.coordinator._last_data.get("heater") == "on"
+
+        if not heater_on:
+            return 0
+
+        preheat_w = self._get_option_int("heater_power_preheat", 1500)
+        heat_w = self._get_option_int("heater_power_heat", 2000)
+
+        if heat_state == 2:
+            return preheat_w
+        elif heat_state == 3:
+            return heat_w
+        elif heat_state == 4:
+            return 0
+        else:
+            return 0
+
+    @property
+    def icon(self):
+        power = self.native_value
+        return "mdi:lightning-bolt" if power > 0 else "mdi:power-plug-off"
