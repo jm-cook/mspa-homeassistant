@@ -37,6 +37,23 @@ class MSpaBaseEntity:
     def entity_picture(self):
         return getattr(self.coordinator, "product_pic_url", None)
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        # Check if coordinator has data and if device is online
+        if not self.coordinator.last_update_success:
+            return False
+        
+        # Check if device is online based on is_online flag or ConnectType
+        is_online = self.coordinator._last_data.get("is_online", True)
+        connect_type = self.coordinator._last_data.get("ConnectType", "")
+        
+        # Device is unavailable if explicitly offline or if ConnectType is "offline"
+        if is_online is False or connect_type == "offline":
+            return False
+        
+        return True
+
 
 class MSpaSensorEntity(MSpaBaseEntity, CoordinatorEntity, SensorEntity):
     pass

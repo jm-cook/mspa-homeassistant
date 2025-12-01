@@ -81,10 +81,6 @@ class MSpaSensor(MSpaSensorEntity):
     def native_value(self):
         return self.coordinator._last_data.get(self._key)
 
-    @property
-    def available(self):
-        return self.coordinator.last_update_success
-
 # This sensor is used for diagnostic purposes.
 # It retrieves various diagnostic information from the MSpa system.
 # The keys are defined in the DIAGNOSTIC_KEYS list.
