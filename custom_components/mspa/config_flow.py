@@ -3,7 +3,14 @@ import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_DEVICE_ID
-from .const import DOMAIN, CONF_PRODUCT_ID
+from .const import (
+    DOMAIN, 
+    CONF_PRODUCT_ID,
+    DEFAULT_PUMP_POWER,
+    DEFAULT_BUBBLE_POWER,
+    DEFAULT_HEATER_POWER_PREHEAT,
+    DEFAULT_HEATER_POWER_HEAT
+)
 import hashlib
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,15 +70,13 @@ class MSpaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
     # Hook the options flow for per-device settings
-    def async_get_options_flow(self, entry):
-        return OptionsFlowHandler(entry)
+    @staticmethod
+    def async_get_options_flow(config_entry):
+        return OptionsFlowHandler(config_entry)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Options flow for per-device heater power settings."""
-
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
+    """Options flow for per-device power consumption settings."""
 
     async def async_step_init(self, user_input=None):
         if user_input is not None:
@@ -80,12 +85,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = vol.Schema({
             vol.Optional(
+                "pump_power",
+                default=self.config_entry.options.get("pump_power", DEFAULT_PUMP_POWER),
+            ): vol.All(int, vol.Range(min=0)),
+            vol.Optional(
+                "bubble_power",
+                default=self.config_entry.options.get("bubble_power", DEFAULT_BUBBLE_POWER),
+            ): vol.All(int, vol.Range(min=0)),
+            vol.Optional(
                 "heater_power_preheat",
-                default=self.config_entry.options.get("heater_power_preheat", 1500),
+                default=self.config_entry.options.get("heater_power_preheat", DEFAULT_HEATER_POWER_PREHEAT),
             ): vol.All(int, vol.Range(min=0)),
             vol.Optional(
                 "heater_power_heat",
-                default=self.config_entry.options.get("heater_power_heat", 2000),
+                default=self.config_entry.options.get("heater_power_heat", DEFAULT_HEATER_POWER_HEAT),
             ): vol.All(int, vol.Range(min=0)),
         })
 
