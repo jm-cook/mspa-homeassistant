@@ -14,7 +14,10 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     DOMAIN,
-    DEFAULT_SCAN_INTERVAL
+    DEFAULT_SCAN_INTERVAL,
+    RAPID_SCAN_INTERVAL,
+    RAPID_POLL_TIMEOUT,
+    RAPID_POLL_MAX_ATTEMPTS
 )
 
 from homeassistant.const import ATTR_STATE, ATTR_TEMPERATURE
@@ -59,6 +62,9 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             coordinator=self,
         )
         self._update_lock = asyncio.Lock()
+        self._rapid_poll_until = None  # Timestamp when to stop rapid polling
+        self._pending_changes = {}  # Track expected changes
+        self._last_heat_state = None  # Track heat state changes
 
 
     async def async_request_refresh(self) -> None:
@@ -108,6 +114,10 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
 
             self._last_data = transformed_data
             _LOGGER.debug("Fetched MSpa transformed data: %s", transformed_data)
+            
+            # Check if we need to adjust polling based on heat state or pending changes
+            await self._check_adaptive_polling(transformed_data)
+            
             return transformed_data
 
         except Exception as err:
@@ -134,6 +144,10 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             numerical_state = 1 if state.lower() == "on" else 0
             api_method = getattr(self.api, self.FEATURE_API_MAP[feature])
             await api_method(numerical_state)
+            
+            # Enable rapid polling to quickly detect the change
+            self._enable_rapid_polling({feature: state})
+            await self.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set %s to %s: %s", feature, state, str(err))
             raise
@@ -144,6 +158,10 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             temperature = service.data.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Setting temperature to %s", temperature)
             await self.api.set_temperature_setting(temperature)
+            
+            # Enable rapid polling to quickly detect the change
+            self._enable_rapid_polling({"target_temperature": temperature})
+            await self.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set temperature: %s", str(err))
             raise
@@ -155,6 +173,10 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Setting bubble state to %s", bubble_state)
             numerical_state = 1 if bubble_state.lower() == "on" else 0
             await self.api.set_bubble_state(numerical_state, self._last_data.get("bubble_level", 1))
+            
+            # Enable rapid polling to quickly detect the change
+            self._enable_rapid_polling({"bubble": bubble_state})
+            await self.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set bubble state: %s", str(err))
             raise
@@ -164,6 +186,10 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             bubble_level = service.data.get("level")
             _LOGGER.debug("Setting bubble level to %s", bubble_level)
             await self.api.set_bubble_level(bubble_level)
+            
+            # Enable rapid polling to quickly detect the change
+            self._enable_rapid_polling({"bubble_level": bubble_level})
+            await self.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to set bubble level: %s", str(err))
             raise
@@ -183,6 +209,69 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
     set_ozone = handle_feature_service
     set_uvc = handle_feature_service
 
+    async def _check_adaptive_polling(self, data: dict) -> None:
+        """Check if we should enable or disable rapid polling."""
+        from datetime import datetime
+        import time
+        
+        current_time = time.time()
+        should_rapid_poll = False
+        
+        # Check if any pending changes have been confirmed
+        if self._pending_changes:
+            confirmed = []
+            for key, expected_value in list(self._pending_changes.items()):
+                if data.get(key) == expected_value:
+                    _LOGGER.debug(f"Pending change confirmed: {key} = {expected_value}")
+                    confirmed.append(key)
+            
+            # Remove confirmed changes
+            for key in confirmed:
+                del self._pending_changes[key]
+            
+            # Continue rapid polling if there are still pending changes
+            if self._pending_changes:
+                should_rapid_poll = True
+                _LOGGER.debug(f"Still waiting for changes: {self._pending_changes}")
+        
+        # Check if we're in preheat mode (heat_state == 2)
+        current_heat_state = data.get("heat_state")
+        if current_heat_state == 2 and data.get("heater") == "on":
+            _LOGGER.debug("Preheat mode detected, enabling rapid polling")
+            should_rapid_poll = True
+        
+        # Track heat state transitions
+        if self._last_heat_state != current_heat_state:
+            _LOGGER.debug(f"Heat state changed: {self._last_heat_state} -> {current_heat_state}")
+            self._last_heat_state = current_heat_state
+        
+        # Check if rapid poll timeout has expired
+        if self._rapid_poll_until and current_time > self._rapid_poll_until:
+            _LOGGER.debug("Rapid poll timeout expired, returning to normal polling")
+            self._rapid_poll_until = None
+            should_rapid_poll = False
+        
+        # Adjust polling interval
+        if should_rapid_poll and not self._rapid_poll_until:
+            # Start rapid polling
+            self._rapid_poll_until = current_time + RAPID_POLL_TIMEOUT
+            self.update_interval = timedelta(seconds=RAPID_SCAN_INTERVAL)
+            _LOGGER.info("Enabled rapid polling (1s interval) for up to 15 seconds")
+        elif not should_rapid_poll and self.update_interval.total_seconds() < DEFAULT_SCAN_INTERVAL:
+            # Return to normal polling
+            self._rapid_poll_until = None
+            self.update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+            _LOGGER.info("Returned to normal polling (60s interval)")
+    
+    def _enable_rapid_polling(self, expected_changes: dict) -> None:
+        """Enable rapid polling and track expected changes."""
+        import time
+        
+        self._pending_changes.update(expected_changes)
+        self._rapid_poll_until = time.time() + RAPID_POLL_TIMEOUT
+        self.update_interval = timedelta(seconds=RAPID_SCAN_INTERVAL)
+        _LOGGER.debug(f"Rapid polling enabled, waiting for changes: {expected_changes}")
+    
     @property
     def last_data(self) -> dict:
         return self._last_data

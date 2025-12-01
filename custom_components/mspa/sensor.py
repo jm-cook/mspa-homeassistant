@@ -1,10 +1,18 @@
 """Sensor platform for MSpa integration."""
 import logging
+from datetime import datetime
 from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.const import UnitOfPower
+from homeassistant.const import UnitOfPower, UnitOfEnergy
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    DEFAULT_PUMP_POWER,
+    DEFAULT_BUBBLE_POWER,
+    DEFAULT_HEATER_POWER_PREHEAT,
+    DEFAULT_HEATER_POWER_HEAT
+)
 from .entity import MSpaSensorEntity, MSpaBinarySensorEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,8 +49,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([MSpaFilterSensor(coordinator)], update_before_add=True)
     async_add_entities([MSpaHeaterTimerBinarySensor(coordinator)], update_before_add=True)
     async_add_entities([MSpaHeaterTimerTimeSensor(coordinator)], update_before_add=True)
-    # Pass the config entry so the heater power sensor can read per-device options
+    # Pass the config entry so the power sensors can read per-device options
     async_add_entities([MSpaHeaterPowerSensor(coordinator, entry)], update_before_add=True)
+    async_add_entities([MSpaTotalPowerSensor(coordinator, entry)], update_before_add=True)
+    # Energy sensors for Energy dashboard
+    async_add_entities([MSpaTotalEnergySensor(coordinator, entry)], update_before_add=True)
 
     diagnostic_sensors = [
         MSpaDiagnosticSensor(coordinator, key, f"{key.replace('_', ' ').title()}")
@@ -189,6 +200,7 @@ class MSpaHeaterPowerSensor(MSpaSensorEntity):
     _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_device_class = SensorDeviceClass.POWER
+    _attr_suggested_display_precision = 0
 
     def __init__(self, coordinator, config_entry):
         super().__init__(coordinator)
@@ -216,8 +228,8 @@ class MSpaHeaterPowerSensor(MSpaSensorEntity):
         if not heater_on:
             return 0
 
-        preheat_w = self._get_option_int("heater_power_preheat", 1500)
-        heat_w = self._get_option_int("heater_power_heat", 2000)
+        preheat_w = self._get_option_int("heater_power_preheat", DEFAULT_HEATER_POWER_PREHEAT)
+        heat_w = self._get_option_int("heater_power_heat", DEFAULT_HEATER_POWER_HEAT)
 
         if heat_state == 2:
             return preheat_w
@@ -232,3 +244,210 @@ class MSpaHeaterPowerSensor(MSpaSensorEntity):
     def icon(self):
         power = self.native_value
         return "mdi:lightning-bolt" if power > 0 else "mdi:power-plug-off"
+
+
+class MSpaTotalPowerSensor(MSpaSensorEntity):
+    """Sensor to report total power consumption based on all active components."""
+    name = "Total Power"
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_suggested_display_precision = 0
+
+    def __init__(self, coordinator, config_entry):
+        super().__init__(coordinator)
+        self._attr_unique_id = f"mspa_total_power_{getattr(coordinator, 'device_id', 'unknown')}"
+        self._attr_device_info = self.device_info
+        self._config_entry = config_entry
+
+    def _get_option_int(self, key: str, default: int) -> int:
+        """Get an integer option from the config entry."""
+        opts = getattr(self._config_entry, "options", {}) or {}
+        val = opts.get(key, default)
+        try:
+            ival = int(val)
+            if ival < 0:
+                raise ValueError
+            return ival
+        except (TypeError, ValueError):
+            return default
+
+    @property
+    def native_value(self):
+        """Calculate total power consumption based on active components."""
+        total_power = 0
+        
+        # Get user-configured power values or use defaults
+        pump_power = self._get_option_int("pump_power", DEFAULT_PUMP_POWER)
+        bubble_power = self._get_option_int("bubble_power", DEFAULT_BUBBLE_POWER)
+        heater_preheat_power = self._get_option_int("heater_power_preheat", DEFAULT_HEATER_POWER_PREHEAT)
+        heater_heat_power = self._get_option_int("heater_power_heat", DEFAULT_HEATER_POWER_HEAT)
+        
+        # Pump/Filter power - runs when filter is on
+        filter_on = self.coordinator._last_data.get("filter") == "on"
+        if filter_on:
+            total_power += pump_power
+        
+        # Bubble power - runs when bubbles are on
+        bubble_on = self.coordinator._last_data.get("bubble") == "on"
+        if bubble_on:
+            total_power += bubble_power
+        
+        # Heater power - based on heat state
+        heater_on = self.coordinator._last_data.get("heater") == "on"
+        if heater_on:
+            heat_state = self.coordinator._last_data.get("heat_state")
+            if heat_state == 2:  # Preheating
+                total_power += heater_preheat_power
+            elif heat_state == 3:  # Active heating
+                total_power += heater_heat_power
+        
+        return total_power
+
+    @property
+    def icon(self):
+        power = self.native_value
+        if power == 0:
+            return "mdi:power-plug-off"
+        elif power < 500:
+            return "mdi:gauge-low"
+        elif power < 1500:
+            return "mdi:gauge"
+        else:
+            return "mdi:gauge-full"
+
+    @property
+    def extra_state_attributes(self):
+        """Return additional attributes showing breakdown of power usage."""
+        pump_power = self._get_option_int("pump_power", DEFAULT_PUMP_POWER)
+        bubble_power = self._get_option_int("bubble_power", DEFAULT_BUBBLE_POWER)
+        heater_preheat_power = self._get_option_int("heater_power_preheat", DEFAULT_HEATER_POWER_PREHEAT)
+        heater_heat_power = self._get_option_int("heater_power_heat", DEFAULT_HEATER_POWER_HEAT)
+        
+        filter_on = self.coordinator._last_data.get("filter") == "on"
+        bubble_on = self.coordinator._last_data.get("bubble") == "on"
+        heater_on = self.coordinator._last_data.get("heater") == "on"
+        heat_state = self.coordinator._last_data.get("heat_state")
+        
+        return {
+            "pump_power": pump_power if filter_on else 0,
+            "bubble_power": bubble_power if bubble_on else 0,
+            "heater_power": (heater_preheat_power if heat_state == 2 else heater_heat_power if heat_state == 3 else 0) if heater_on else 0,
+            "configured_pump_power": pump_power,
+            "configured_bubble_power": bubble_power,
+            "configured_heater_preheat_power": heater_preheat_power,
+            "configured_heater_heat_power": heater_heat_power,
+        }
+
+
+class MSpaTotalEnergySensor(MSpaSensorEntity, RestoreEntity):
+    """Sensor to track total energy consumption in kWh for Energy dashboard."""
+    name = "Total Energy"
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_suggested_display_precision = 3
+
+    def __init__(self, coordinator, config_entry):
+        super().__init__(coordinator)
+        self._attr_unique_id = f"mspa_total_energy_{getattr(coordinator, 'device_id', 'unknown')}"
+        self._attr_device_info = self.device_info
+        self._config_entry = config_entry
+        self._total_energy = 0.0  # Total energy in kWh
+        self._last_update_time = None
+        self._last_power = 0
+
+    async def async_added_to_hass(self):
+        """Restore previous state when entity is added to hass."""
+        await super().async_added_to_hass()
+        
+        # Restore the last known energy value
+        last_state = await self.async_get_last_state()
+        if last_state is not None and last_state.state not in (None, "unknown", "unavailable"):
+            try:
+                self._total_energy = float(last_state.state)
+                _LOGGER.debug(f"Restored energy sensor state: {self._total_energy} kWh")
+            except (ValueError, TypeError):
+                _LOGGER.warning(f"Could not restore energy sensor state: {last_state.state}")
+                self._total_energy = 0.0
+        
+        self._last_update_time = datetime.now()
+
+    def _get_option_int(self, key: str, default: int) -> int:
+        """Get an integer option from the config entry."""
+        opts = getattr(self._config_entry, "options", {}) or {}
+        val = opts.get(key, default)
+        try:
+            ival = int(val)
+            if ival < 0:
+                raise ValueError
+            return ival
+        except (TypeError, ValueError):
+            return default
+
+    def _calculate_current_power(self) -> float:
+        """Calculate current power consumption in watts."""
+        total_power = 0
+        
+        # Get user-configured power values or use defaults
+        pump_power = self._get_option_int("pump_power", DEFAULT_PUMP_POWER)
+        bubble_power = self._get_option_int("bubble_power", DEFAULT_BUBBLE_POWER)
+        heater_preheat_power = self._get_option_int("heater_power_preheat", DEFAULT_HEATER_POWER_PREHEAT)
+        heater_heat_power = self._get_option_int("heater_power_heat", DEFAULT_HEATER_POWER_HEAT)
+        
+        # Pump/Filter power
+        if self.coordinator._last_data.get("filter") == "on":
+            total_power += pump_power
+        
+        # Bubble power
+        if self.coordinator._last_data.get("bubble") == "on":
+            total_power += bubble_power
+        
+        # Heater power
+        if self.coordinator._last_data.get("heater") == "on":
+            heat_state = self.coordinator._last_data.get("heat_state")
+            if heat_state == 2:  # Preheating
+                total_power += heater_preheat_power
+            elif heat_state == 3:  # Active heating
+                total_power += heater_heat_power
+        
+        return total_power
+
+    @property
+    def native_value(self):
+        """Return the total energy consumption in kWh."""
+        # Calculate energy since last update using trapezoidal rule (average power * time)
+        current_time = datetime.now()
+        current_power = self._calculate_current_power()
+        
+        if self._last_update_time is not None:
+            time_diff_hours = (current_time - self._last_update_time).total_seconds() / 3600
+            # Use average of last and current power (trapezoidal integration)
+            avg_power = (self._last_power + current_power) / 2
+            energy_increment = (avg_power * time_diff_hours) / 1000  # Convert Wh to kWh
+            self._total_energy += energy_increment
+            
+            if energy_increment > 0:
+                _LOGGER.debug(
+                    f"Energy increment: {energy_increment:.6f} kWh "
+                    f"(avg power: {avg_power:.1f}W over {time_diff_hours*3600:.1f}s)"
+                )
+        
+        self._last_update_time = current_time
+        self._last_power = current_power
+        
+        return round(self._total_energy, 3)
+
+    @property
+    def icon(self):
+        return "mdi:lightning-bolt"
+
+    @property
+    def extra_state_attributes(self):
+        """Return additional attributes."""
+        current_power = self._calculate_current_power()
+        return {
+            "current_power_w": current_power,
+            "last_reset": None,  # Total increasing sensor, never resets
+        }
+        
