@@ -91,7 +91,7 @@ class MSpaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Get region from user input, or use detected region if not specified
             region = user_input.get(CONF_REGION, detected_region)
             
-            _LOGGER.info(f"Using region: {region} (detected: {detected_region}, user selected: {user_input.get(CONF_REGION)})")$
+            _LOGGER.info(f"Using region: {region} (detected: {detected_region}, user selected: {user_input.get(CONF_REGION)})")
 
             return self.async_create_entry(
                 title="MSpa Hot Tub",
@@ -122,7 +122,7 @@ class MSpaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # Hook the options flow for per-device settings
     @staticmethod
     def async_get_options_flow(config_entry):
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
