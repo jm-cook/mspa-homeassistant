@@ -53,6 +53,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
         self.config = config_entry.data
         self.account_email = self.config["account_email"]
         self.password = self.config["password"]  # Already MD5 hashed
+        self.region = self.config.get("region", "ROW")  # Default to ROW for safety
 
         self._last_data = {}
         self.api = MSpaApiClient(
@@ -60,6 +61,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             account_email=self.account_email,
             password=self.password,
             coordinator=self,
+            region=self.region,
         )
         self._update_lock = asyncio.Lock()
         self._rapid_poll_until = None  # Timestamp when to stop rapid polling

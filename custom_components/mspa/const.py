@@ -9,6 +9,53 @@ RAPID_POLL_MAX_ATTEMPTS = 15  # Maximum number of rapid polls
 
 # Configuration
 CONF_PRODUCT_ID = "product_id"
+CONF_REGION = "region"
+
+# Region configuration
+# ROW = Rest of World (Europe, Africa, Middle East, Oceania, etc.)
+# US = United States and Canada
+# CH = China mainland
+DEFAULT_REGION = "ROW"  # Safe default for European operation
+
+REGIONS = {
+    "ROW": "Automatic (Europe/Rest of World)",
+    "US": "United States",
+    "CH": "China"
+}
+
+# API Base URLs by region
+API_ENDPOINTS = {
+    "ROW": "https://api.iot.the-mspa.com",
+    "US": "https://api.usiot.the-mspa.com",
+    "CH": "https://api.mspa.mxchip.com.cn"
+}
+
+# Country code to region mapping for automatic detection
+# This ensures proper regional routing based on user's country
+COUNTRY_TO_REGION = {
+    # North America - US Servers
+    "US": "US",  # United States
+    "CA": "US",  # Canada
+    "MX": "US",  # Mexico (often routes through US)
+    
+    # China - China Servers
+    "CN": "CH",  # China
+    "HK": "CH",  # Hong Kong
+    "MO": "CH",  # Macau
+    
+    # All other countries default to ROW (Europe-based servers)
+    # This includes:
+    # - Europe: AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, 
+    #   LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, GB, NO, CH, IS, etc.
+    # - Middle East: AE, SA, IL, etc.
+    # - Africa: ZA, NG, KE, etc.
+    # - Oceania: AU, NZ, etc.
+    # - Asia (non-China): JP, KR, SG, TH, MY, IN, etc.
+    # - South America: BR, AR, CL, etc.
+    #
+    # Note: ROW region provides the best compatibility and is the default
+    # fallback for any country not explicitly listed above.
+}
 
 # Services
 SERVICE_SET_TEMPERATURE = "set_temperature"

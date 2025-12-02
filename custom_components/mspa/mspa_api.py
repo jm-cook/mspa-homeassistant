@@ -20,13 +20,14 @@ app_secret = "87025c9ecd18906d27225fe79cb68349"
 
 
 class MSpaApiClient:
-    def __init__(self, hass, account_email, password, coordinator, token=None):
+    def __init__(self, hass, account_email, password, coordinator, region="ROW", token=None):
         self.account_email = account_email
         self.password = password
         self.app_id = app_id
         self.app_secret = app_secret
         self.hass = hass
         self.coordinator = coordinator
+        self.region = region if region in ["ROW", "US", "CH"] else "ROW"  # Safe fallback
 
         # Clear any existing cached token when creating a new API client
         # This ensures we don't reuse old tokens with new credentials
@@ -48,6 +49,20 @@ class MSpaApiClient:
         self._token = token
         self.product_id = None
         self.device_id = None
+        
+        # Regional API endpoints with rock-solid fallback to ROW (Europe)
+        self._api_endpoints = {
+            "ROW": "https://api.iot.the-mspa.com",
+            "US": "https://api.usiot.the-mspa.com",
+            "CH": "https://api.mspa.mxchip.com.cn"
+        }
+        _LOGGER.info("DIAGNOSTIC: MSpa API initialized for region: %s, endpoint: %s", 
+                     self.region, self.base_url)
+    
+    @property
+    def base_url(self):
+        """Get the base URL for the current region with fallback to ROW."""
+        return self._api_endpoints.get(self.region, self._api_endpoints["ROW"])
         self.series = None
         self.model = None
         self.software_version = None
@@ -162,9 +177,9 @@ class MSpaApiClient:
             "registration_id": "",
             "push_type": "android",
             "lan_code": "EN",
-            "country": ""
+            "country": ""  # Country is not required for authentication
         }
-        token_request_url = "https://api.iot.the-mspa.com/api/enduser/get_token/"
+        token_request_url = f"{self.base_url}/api/enduser/get_token/"
 
         _LOGGER.info("DIAGNOSTIC: Attempting authentication to %s", token_request_url)
         # Obfuscate email for privacy
@@ -242,7 +257,7 @@ class MSpaApiClient:
             "desired": json.dumps({"state": {"desired": desired_dict}})
         }
 
-        url = "https://api.iot.the-mspa.com/api/device/command"
+        url = f"{self.base_url}/api/device/command"
         _LOGGER.debug("send_device_command: %s, url: %s", desired_dict, url)
         response = await self.hass.async_add_executor_job(
             functools.partial(requests.post, url, headers=headers, json=payload)
@@ -314,7 +329,7 @@ class MSpaApiClient:
             "device_id": self.device_id,
             "product_id": self.product_id
         }
-        url = "https://api.iot.the-mspa.com/api/device/thing_shadow/"
+        url = f"{self.base_url}/api/device/thing_shadow/"
         response = await self.hass.async_add_executor_job(
             functools.partial(requests.post, url, headers=headers, json=payload)
         )
@@ -342,7 +357,7 @@ class MSpaApiClient:
             "accept-encoding": "gzip",
             "user-agent": "okhttp/4.9.0"
         }
-        url = "https://api.iot.the-mspa.com/api/enduser/devices/"
+        url = f"{self.base_url}/api/enduser/devices/"
 
         _LOGGER.info("DIAGNOSTIC: Attempting to get device list from %s (retry=%s)", url, retry)
         _LOGGER.info("DIAGNOSTIC: Using token (first 20 chars): %s...", self.get_former_token()[:20] if self.get_former_token() else "None")
