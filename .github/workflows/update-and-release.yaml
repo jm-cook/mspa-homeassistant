@@ -27,7 +27,8 @@ jobs:
           git add custom_components/mspa/manifest.json
           if ! git diff --cached --quiet; then
             git commit -m "Update manifest version to ${{ github.ref_name }}"
-            git push origin HEAD:main
+            # Push to the current branch (not hardcoded to main)
+            git push origin HEAD:${{ github.event.release.target_commitish }}
           fi
 
           # Move the tag to this commit and force-push
