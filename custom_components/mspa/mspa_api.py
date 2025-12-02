@@ -56,6 +56,14 @@ class MSpaApiClient:
             "US": "https://api.usiot.the-mspa.com",
             "CH": "https://api.mspa.mxchip.com.cn"
         }
+        
+        # Initialize device attributes
+        self.series = None
+        self.model = None
+        self.software_version = None
+        self.product_pic_url = None
+        self._last_status = None
+        
         _LOGGER.info("DIAGNOSTIC: MSpa API initialized for region: %s, endpoint: %s", 
                      self.region, self.base_url)
     
@@ -63,11 +71,6 @@ class MSpaApiClient:
     def base_url(self):
         """Get the base URL for the current region with fallback to ROW."""
         return self._api_endpoints.get(self.region, self._api_endpoints["ROW"])
-        self.series = None
-        self.model = None
-        self.software_version = None
-        self.product_pic_url = None
-        self._last_status = None
 
     async def async_init(self):
         _LOGGER.info("DIAGNOSTIC: Starting MSpaApiClient initialization")
