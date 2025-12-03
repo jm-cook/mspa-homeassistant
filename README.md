@@ -64,7 +64,7 @@ To configure the MSPA integration in Home Assistant:
 
     ![Configuration dialog showing email, password, and region selection](img/config-dialog.png)
     
-    > **Note on Multi-Region Support**: Multi-region support is **new and experimental**. While the ROW (Europe) region is well-tested, the US and CH regions have had limited testing. The region endpoints were identified from the [openHAB MSpa binding](https://www.openhab.org/addons/bindings/mspa/). If you use the US or CH regions, please provide feedback on whether the integration works correctly in your region by opening an issue on GitHub.
+    > **Note on Multi-Region Support**: Multi-region support is **new and experimental**. While the ROW (Europe) region is well-tested, the US and CH regions have had limited testing. The region endpoints were identified from the [openHAB MSpa binding](https://github.com/weymann/openhab-addons/tree/main/bundles/org.openhab.binding.mspa). If you use the US or CH regions, please provide feedback on whether the integration works correctly in your region by opening an issue on GitHub.
 
 5. Click **Submit** to complete the configuration.
 6. If the registration is successful, you will see your device and some entities for monitoring and controlling it.
