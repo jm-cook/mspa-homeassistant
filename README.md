@@ -57,8 +57,14 @@ To configure the MSPA integration in Home Assistant:
 4. Enter the required information:
     - `email`: Your guest email for the MSPA account.
     - `password`: The MSPA account password for the guest user.
+    - `region`: The integration will auto-detect your region based on your Home Assistant country setting. You can override this if needed:
+      - **ROW (Rest of World/Europe)**: For European and other global regions
+      - **US**: For United States and Canada
+      - **CH**: For China, Hong Kong, and Macau
 
-    ![img.png](img/img3.png)
+    ![Configuration dialog showing email, password, and region selection](img/config-dialog.png)
+    
+    ![Region auto-detection and selection](img/region-config.png)
 
 5. Click **Submit** to complete the configuration.
 6. If the registration is successful, you will see your device and some entities for monitoring and controlling it.
@@ -74,11 +80,11 @@ To configure the MSPA integration in Home Assistant:
 
 ## Integration page
 
-![img.png](img/img6.png)
+![MSpa integration page showing device and entities](img/integration-page.png)
 
 ## Device page
 
-![img.png](img/img.png)
+![MSpa device page showing controls and sensors](img/device-page.png)
 
 ## Enabling the Filter status Sensor
 
@@ -102,43 +108,85 @@ The climate entity will show the following states:
 - `idle`: The hot tub is on but not actively heating. This would normally be the state when the water is at or above the desired temperature.
 - `heating`: The hot tub is actively heating the water.
 
-## Heater Power Sensor
+## Power and Energy Monitoring
 
-The integration provides a `Heater Power` sensor that reports the current power consumption of the heater in watts. This sensor allows you to:
-- Monitor real-time power usage based on the heating state
-- Create energy consumption tracking using Home Assistant's built-in Riemann Sum Integral helper
-- Set up automations based on power consumption
+The integration provides comprehensive power and energy monitoring for your hot tub, including individual component sensors and total power/energy tracking that can be added directly to Home Assistant's Energy dashboard.
 
-The sensor reports power consumption based on the heater state:
-- **Preheat mode**: 1500W
-- **Heating mode**: 2000W
-- **Idle mode**: 0W
-- **Heater off**: 0W
+### Power Sensors
 
-### Creating an Energy Sensor
+The integration provides the following power sensors that report real-time power consumption in watts:
 
-To track total energy consumption, you can create a Riemann Sum Integral helper:
+- **Pump Power**: Reports pump power consumption (default: 60W when running)
+- **Bubble Power**: Reports bubble blower power consumption (default: 900W when running)
+- **Heater Power**: Reports heater power consumption based on heating state:
+  - Preheat mode: 1500W (default)
+  - Heating mode: 2000W (default)
+  - Idle/off: 0W
+- **Total Power**: Automatically calculates the sum of all active components and provides a breakdown in the sensor attributes
 
-1. Go to **Settings** > **Devices & Services** > **Helpers**
-2. Click **Create Helper** and select **Riemann sum integral**
-3. Configure the helper:
-   - **Input sensor**: Select your `Heater Power` sensor
-   - **Name**: Choose a name like "Hot Tub Energy"
-   - **Integration method**: Left
-   - **Precision**: 2
-   - **Metric prefix**: k (kilo)
-   - **Time unit**: Hours
-4. Click **Submit**
+### Energy Sensor (Energy Dashboard Compatible)
 
-This will create an energy sensor that shows total energy consumption in kWh, which you can add to your Energy dashboard or use in automations.
+The integration includes a **Total Energy** sensor that:
+- Tracks cumulative energy consumption in kWh
+- Uses the **Energy** device class for direct compatibility with Home Assistant's Energy dashboard
+- Persists across Home Assistant restarts
+- Calculates energy using trapezoidal integration for accuracy
+- Can be added to the Energy dashboard under individual devices
+
+To add the energy sensor to your Energy dashboard:
+1. Go to **Settings** > **Dashboards** > **Energy**
+2. Click **Add Consumption** under "Individual Devices"
+3. Select your `Total Energy` sensor from the MSpa device
+4. Click **Save**
+
+### Calibrating Power Consumption Values
+
+The default power consumption values are based on typical MSpa specifications, but actual power usage may vary by model and region. You can calibrate these values to match your specific hot tub:
+
+1. **Find your MSpa specifications**: Check your hot tub's manual or specification plate for the actual power ratings of:
+   - Filter pump (typically 40-80W)
+   - Bubble blower (typically 800-1000W)
+   - Heater during preheat (typically 1200-1500W)
+   - Heater during normal heating (typically 1800-2200W)
+
+2. **Adjust the values**:
+   - Go to **Settings** > **Devices & Services** > **MSpa**
+   - Click **Configure** on your MSpa integration
+   - Enter the power consumption values for your specific model:
+     - **Pump Power** (default: 60W)
+     - **Bubble Power** (default: 900W)
+     - **Heater Power (Preheat)** (default: 1500W)
+     - **Heater Power (Heat)** (default: 2000W)
+   - Click **Submit**
+   
+   ![Power consumption calibration dialog](img/power-calibration.png)
+
+3. **Fine-tune based on experience**: If you have a way to measure actual power consumption (e.g., smart plug with power monitoring), you can further refine these values based on real-world measurements.
+
+**Note**: The MSpa Comfort C-BE061 specifications show:
+- Filter pump: 60W
+- Bubble blower: 900W
+- Heater: 1500W (preheat) / 2000W (heating)
+
+These are used as defaults, but your model may differ.
+
+## Multi-Region Support
+
+The integration supports MSpa hot tubs in multiple regions:
+
+- **ROW (Rest of World)**: Europe, Middle East, Africa, and other regions (api.iot.the-mspa.com)
+- **US**: United States and Canada (api.usiot.the-mspa.com)
+- **CH**: China, Hong Kong, and Macau (api.mspa.mxchip.com.cn)
+
+The integration will automatically detect your region based on your Home Assistant country setting during initial setup. If auto-detection selects the wrong region, you can manually override it in the configuration dialog. The integration will fall back to the ROW (European) region if auto-detection fails or if your country is not specifically mapped.
 
 ## Thermostat popup
 
-![img.png](img/img2.png)
+![Climate entity thermostat control popup](img/thermostat-popup.png)
 
 ## Example dashboard using mushroom cards:
 
-![img.png](img/img7.png)
+![Dashboard example with mushroom cards showing hot tub controls](img/dashboard-example.png)
 
 ## Limitations
 
@@ -162,8 +210,11 @@ For issues or feature requests, please open an issue in this repository.
 <!-- Badges -->
 [hacs-badge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square
 [release-badge]: https://img.shields.io/github/v/release/jm-cook/mspa-homeassistant?style=flat-square
-[downloads-badge]: https://img.shields.io/github/downloads/jm-cook/mspa-homeassistant/total?style=flat-square
-[hacs-url]: https://github.com/hacs/integration
+## Limitations
 
-[maintenance-badge]: https://img.shields.io/maintenance/yes/2025.svg?style=flat-square
-[release-url]: https://github.com/jm-cook/mspa-homeassistant/releases
+- It is not currently possible to determine which features your specific MSPA hot tub supports. If you find that some features, such as jet or ozone, do not work, it may be due to the specific model of your hot tub. You can disable the relevant entities in the Home Assistant UI.
+- The safety lock feature is not available in this integration. You can still operate the safety lock through the MSPA Link app.
+- Power consumption values are estimates based on typical specifications. For accurate energy tracking, calibrate the values based on your hot tub's specifications or measured power consumption.
+
+
+## Troubleshooting

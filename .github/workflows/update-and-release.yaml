@@ -13,12 +13,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Extract version without 'v' prefix
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
       - name: Set manifest.json version
         uses: jossef/action-set-json-field@v2
         with:
           file: custom_components/mspa/manifest.json
           field: version
-          value: ${{ github.ref_name }}
+          value: ${{ steps.get_version.outputs.VERSION }}
 
       - name: Commit the updated manifest and push changes
         run: |
@@ -26,7 +30,7 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git add custom_components/mspa/manifest.json
           if ! git diff --cached --quiet; then
-            git commit -m "Update manifest version to ${{ github.ref_name }}"
+            git commit -m "Update manifest version to ${{ steps.get_version.outputs.VERSION }}"
             # Push to the current branch (not hardcoded to main)
             git push origin HEAD:${{ github.event.release.target_commitish }}
           fi

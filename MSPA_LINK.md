@@ -20,11 +20,11 @@ To use this integration securely, it is recommended to create a dedicated guest 
 4. **Invite a Guest User**
     - Tap **Share the Spa**. A QR code will be displayed on the screen.
  
-      ![img.png](img/img4.png)
+      ![Share the Spa QR code screen](img/share-spa-qr.png)
 
     - The guest user / app should now click "add a new spa", and then click on the icon at the **top right** of the screen to scan the QR code.
     
-      ![img.png](img/img5.png)
+      ![Scan QR code icon location](img/scan-qr-icon.png)
  
     - Scan the QR code displayed on the main user device with the guest device.
     - Your MSPA hot tub will now be shared with the guest account and can be used with the Home Assistant integration.
