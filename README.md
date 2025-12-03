@@ -58,13 +58,13 @@ To configure the MSPA integration in Home Assistant:
     - `email`: Your guest email for the MSPA account.
     - `password`: The MSPA account password for the guest user.
     - `region`: The integration will auto-detect your region based on your Home Assistant country setting. You can override this if needed:
-      - **ROW (Rest of World/Europe)**: For European and other global regions
-      - **US**: For United States and Canada
-      - **CH**: For China, Hong Kong, and Macau
+      - **ROW (Rest of World/Europe)**: For European and other global regions (api.iot.the-mspa.com)
+      - **US**: For United States and Canada (api.usiot.the-mspa.com)
+      - **CH**: For China, Hong Kong, and Macau (api.mspa.mxchip.com.cn)
 
     ![Configuration dialog showing email, password, and region selection](img/config-dialog.png)
     
-    ![Region auto-detection and selection](img/region-config.png)
+    > **Note on Multi-Region Support**: Multi-region support is **new and experimental**. While the ROW (Europe) region is well-tested, the US and CH regions have had limited testing. The region endpoints were identified from the [openHAB MSpa binding](https://www.openhab.org/addons/bindings/mspa/). If you use the US or CH regions, please provide feedback on whether the integration works correctly in your region by opening an issue on GitHub.
 
 5. Click **Submit** to complete the configuration.
 6. If the registration is successful, you will see your device and some entities for monitoring and controlling it.
@@ -106,7 +106,8 @@ The integration also provides `hvac_action` as part of the climate sensor that i
 The climate entity will show the following states:
 - `off`: The hot tub is turned off.
 - `idle`: The hot tub is on but not actively heating. This would normally be the state when the water is at or above the desired temperature.
-- `heating`: The hot tub is actively heating the water.
+- `preheating`: The hot tub is in preheat mode (heat_state = 2), warming up the water before entering full heating mode.
+- `heating`: The hot tub is actively heating the water (heat_state = 3).
 
 ## Power and Energy Monitoring
 
@@ -151,7 +152,7 @@ The default power consumption values are based on typical MSpa specifications, b
 
 2. **Adjust the values**:
    - Go to **Settings** > **Devices & Services** > **MSpa**
-   - Click **Configure** on your MSpa integration
+   - Click the **⚙️ cog wheel button** (Configure) on your MSpa integration
    - Enter the power consumption values for your specific model:
      - **Pump Power** (default: 60W)
      - **Bubble Power** (default: 900W)
@@ -169,16 +170,6 @@ The default power consumption values are based on typical MSpa specifications, b
 - Heater: 1500W (preheat) / 2000W (heating)
 
 These are used as defaults, but your model may differ.
-
-## Multi-Region Support
-
-The integration supports MSpa hot tubs in multiple regions:
-
-- **ROW (Rest of World)**: Europe, Middle East, Africa, and other regions (api.iot.the-mspa.com)
-- **US**: United States and Canada (api.usiot.the-mspa.com)
-- **CH**: China, Hong Kong, and Macau (api.mspa.mxchip.com.cn)
-
-The integration will automatically detect your region based on your Home Assistant country setting during initial setup. If auto-detection selects the wrong region, you can manually override it in the configuration dialog. The integration will fall back to the ROW (European) region if auto-detection fails or if your country is not specifically mapped.
 
 ## Thermostat popup
 
