@@ -7,6 +7,8 @@ from .const import (
     DOMAIN, 
     CONF_PRODUCT_ID,
     CONF_REGION,
+    CONF_TRACK_TEMPERATURE_UNIT,
+    CONF_RESTORE_STATE,
     DEFAULT_REGION,
     REGIONS,
     COUNTRY_TO_REGION,
@@ -150,6 +152,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 "heater_power_heat",
                 default=self.config_entry.options.get("heater_power_heat", DEFAULT_HEATER_POWER_HEAT),
             ): vol.All(int, vol.Range(min=0)),
+            vol.Optional(
+                CONF_TRACK_TEMPERATURE_UNIT,
+                default=self.config_entry.options.get(CONF_TRACK_TEMPERATURE_UNIT, False),
+                description="Automatically set temperature unit based on Home Assistant unit system"
+            ): bool,
+            vol.Optional(
+                CONF_RESTORE_STATE,
+                default=self.config_entry.options.get(CONF_RESTORE_STATE, False),
+                description="Restore previous states after power outage"
+            ): bool,
         })
 
         return self.async_show_form(step_id="init", data_schema=data_schema)

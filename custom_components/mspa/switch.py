@@ -85,9 +85,9 @@ class MSpaBubbleSwitch(MSpaFeatureSwitch):
     def __init__(self, coordinator):
         super().__init__(coordinator)
 
-    async def async_turn_on(self, **kwargs):
-        _LOGGER.debug("Turning on %s", self.feature)
-        await self.coordinator.set_bubble(type("ServiceCall", (), {"data": {"state": "on"}}))
+    async def async_turn_off(self, **kwargs):
+        _LOGGER.debug("Turning off %s", self.feature)
+        await self.coordinator.set_bubble(type("ServiceCall", (), {"data": {"state": "off"}}))
 
     async def async_turn_off(self, **kwargs):
         _LOGGER.debug("Turning off %s", self.feature)

@@ -312,6 +312,10 @@ class MSpaApiClient:
     async def set_temperature_setting(self, temp: int):
         return await self.send_device_command({"temperature_setting": temp*2})
 
+    async def set_temperature_unit(self, unit: int):
+        """Set temperature unit (0=Celsius, 1=Fahrenheit)."""
+        return await self.send_device_command({"temperature_unit": unit})
+
     async def get_hot_tub_status(self, retry=False):
         nonce = self.generate_nonce()
         ts = self.current_ts()

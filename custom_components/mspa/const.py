@@ -10,6 +10,8 @@ RAPID_POLL_MAX_ATTEMPTS = 15  # Maximum number of rapid polls
 # Configuration
 CONF_PRODUCT_ID = "product_id"
 CONF_REGION = "region"
+CONF_TRACK_TEMPERATURE_UNIT = "track_temperature_unit"
+CONF_RESTORE_STATE = "restore_state"
 
 # Region configuration
 # ROW = Rest of World (Europe, Africa, Middle East, Oceania, etc.)

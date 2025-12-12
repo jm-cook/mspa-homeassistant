@@ -171,6 +171,51 @@ The default power consumption values are based on typical MSpa specifications, b
 
 These are used as defaults, but your model may differ.
 
+## Temperature Unit Control
+
+The MSpa hardware defaults to Fahrenheit when powered on, which can be inconvenient for users with Celsius-based systems. The integration provides several features to manage temperature units:
+
+### Temperature Unit Selector
+
+A dedicated **Temperature Unit** select entity is available to choose between:
+- **Celsius**
+- **Fahrenheit**
+
+Simply select your preferred unit from the dropdown, and the integration will update the MSpa device accordingly.
+
+### Automatic Temperature Unit Tracking
+
+To automatically set the temperature unit based on your Home Assistant unit system:
+
+1. Go to **Settings** > **Devices & Services** > **MSpa**
+2. Click the **⚙️ cog wheel button** (Configure)
+3. Enable **"Track temperature unit based on Home Assistant unit system"**
+4. Click **Submit**
+
+When enabled, the integration will automatically set the MSpa's temperature unit to match your Home Assistant configuration whenever the device powers on.
+
+### State Restoration After Power Outage
+
+The MSpa hardware resets to default values (Fahrenheit, 40°C target temperature, all features off) when power cycled. To automatically restore your previous settings:
+
+1. Go to **Settings** > **Devices & Services** > **MSpa**
+2. Click the **⚙️ cog wheel button** (Configure)
+3. Enable **"Restore previous states after power outage"**
+4. Click **Submit**
+
+When enabled, the integration will:
+- Detect when the MSpa powers off and on (using the `is_online` field)
+- Save the current state before power loss
+- Automatically restore the following when power returns:
+  - Temperature unit (Celsius/Fahrenheit)
+  - Target temperature
+  - Heater state
+  - Filter state
+  - Ozone state
+  - UVC state
+
+**Note**: The temperature unit is always restored first (if configured), followed by temperature settings, then other features. There are brief delays between restorations to ensure commands are processed correctly.
+
 ## Thermostat popup
 
 ![Climate entity thermostat control popup](img/thermostat-popup.png)
