@@ -249,11 +249,11 @@ When enabled, the integration will:
 For issues or feature requests, please open an issue in this repository.
 
 <!-- Badge definitions -->
-[hacs-badge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square
+[hacs-badge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
 [hacs-url]: https://hacs.xyz/
-[hacs-validation-badge]: https://github.com/jm-cook/mspa-homeassistant/workflows/Validate/badge.svg
+[hacs-validation-badge]: https://github.com/jm-cook/mspa-homeassistant/workflows/Validate/badge.svg?style=for-the-badge
 [hacs-validation-url]: https://github.com/jm-cook/mspa-homeassistant/actions/workflows/validate.yaml
-[maintenance-badge]: https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=flat-square
-[release-badge]: https://img.shields.io/github/v/release/jm-cook/mspa-homeassistant?style=flat-square
+[maintenance-badge]: https://img.shields.io/badge/Maintained-yes-green.svg?style=for-the-badge
+[release-badge]: https://img.shields.io/github/v/release/jm-cook/mspa-homeassistant?style=for-the-badge
 [release-url]: https://github.com/jm-cook/mspa-homeassistant/releases
-[downloads-badge]: https://img.shields.io/github/downloads/jm-cook/mspa-homeassistant/total?style=flat-square
+[downloads-badge]: https://img.shields.io/github/downloads/jm-cook/mspa-homeassistant/total?style=for-the-badge
