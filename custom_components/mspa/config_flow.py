@@ -155,12 +155,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             vol.Optional(
                 CONF_TRACK_TEMPERATURE_UNIT,
                 default=self.config_entry.options.get(CONF_TRACK_TEMPERATURE_UNIT, False),
-                description="Automatically set temperature unit based on Home Assistant unit system"
+                description="Set MSpa temperature unit to match Home Assistant system unit on power-up"
             ): bool,
             vol.Optional(
                 CONF_RESTORE_STATE,
                 default=self.config_entry.options.get(CONF_RESTORE_STATE, False),
-                description="Restore previous states after power outage"
+                description="Restore previous states after power outage (heater, temperature, filter, etc.)"
             ): bool,
         })
 

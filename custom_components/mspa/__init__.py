@@ -13,8 +13,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.CLIMATE,
-    Platform.NUMBER,
-    Platform.SELECT
+    Platform.NUMBER
 ]
 
 SERVICES = [

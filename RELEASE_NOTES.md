@@ -4,45 +4,42 @@
 
 This release addresses the MSpa hardware's tendency to reset to Fahrenheit and default settings after power cycles, providing automatic temperature unit management and state restoration.
 
-### 🌡️ Temperature Unit Control
-- **Temperature Unit Selector**: New select entity to choose between Celsius and Fahrenheit
-  - Intuitive dropdown selection (no more ON/OFF confusion)
-  - Direct control over MSpa's temperature_unit setting (0=Celsius, 1=Fahrenheit)
-  - Integrated with adaptive polling for fast confirmation
-- **Automatic Unit Tracking**: Optional feature to automatically set temperature unit based on Home Assistant's unit system
+### 🌡️ Temperature Unit Management
+- **Automatic Unit Tracking**: Optional feature to set MSpa device temperature unit to match Home Assistant's system unit on power-up
   - Enable via integration configuration options
-  - Automatically applies when MSpa powers on
-  - Eliminates manual unit switching after power outages
+  - Works independently - no manual unit selector needed
+  - Eliminates the annoyance of MSpa resetting to Fahrenheit after power outages
+  - Only affects MSpa device display, not HA display (HA always uses system preference)
 
 ### 🔄 State Restoration After Power Outage
 - **Power Cycle Detection**: Automatically detects when MSpa is powered off and on using the `is_online` field
 - **State Saving**: Captures current state before power loss:
-  - Temperature unit (Celsius/Fahrenheit)
   - Target temperature
   - Heater state
   - Filter state
   - Ozone state
   - UVC state
 - **Automatic Restoration**: Optionally restores saved states when power returns
-  - Enable via integration configuration options
-  - Restores temperature unit first, then temperature, then features
+  - Enable via integration configuration options (independent of temperature unit tracking)
   - Includes delays between commands for reliable execution
   - Eliminates need to manually reconfigure after power outages
 
 ### 🔧 Technical Improvements
-- **Dynamic Climate Unit**: Climate entity now uses dynamic temperature_unit from device payload instead of static TEMP_UNIT constant
+- **Static Climate Unit**: Climate entity always uses Celsius (API native format) with HA handling display conversion based on user's system preference
 - **Enhanced Coordinator**: Added power cycle detection and state restoration logic with is_online tracking
 - **API Extension**: Added `set_temperature_unit(unit)` method to mspa_api for temperature unit control
+- **Independent Options**: Temperature unit tracking and state restoration work independently - use one, both, or neither
 
 ### 📝 Configuration Options
 Two new optional settings available in integration configuration (⚙️ cog wheel):
-1. **Track temperature unit based on Home Assistant unit system**: Automatically sets MSpa unit to match HA
-2. **Restore previous states after power outage**: Automatically restores settings when MSpa powers back on
+1. **Track temperature unit**: Automatically set MSpa device unit to match HA system unit on power-up
+2. **Restore previous states after power outage**: Automatically restore device states (heater, temperature, filter, etc.) when MSpa powers back on
 
 **Upgrade Notes**: 
-- After upgrading, you'll see a new "Temperature Unit" selector in your MSpa entities
-- Visit the integration configuration to enable automatic unit tracking and/or state restoration if desired
-- These features are disabled by default to maintain backward compatibility
+- After upgrading, visit the integration configuration to enable the new features if desired
+- Both features are disabled by default to maintain backward compatibility
+- Temperature display always follows your HA system preference (Settings → System → General)
+- The options work independently - enable one, both, or neither based on your needs
 
 ---
 

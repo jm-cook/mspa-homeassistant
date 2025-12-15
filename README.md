@@ -173,26 +173,31 @@ These are used as defaults, but your model may differ.
 
 ## Temperature Unit Control
 
-The MSpa hardware defaults to Fahrenheit when powered on, which can be inconvenient for users with Celsius-based systems. The integration provides several features to manage temperature units:
+The MSpa hardware defaults to Fahrenheit when powered on, which can be inconvenient for users with Celsius-based systems. The integration provides automatic temperature unit management through configuration options.
 
-### Temperature Unit Selector
+### Display vs Device Temperature Units
 
-A dedicated **Temperature Unit** select entity is available to choose between:
-- **Celsius**
-- **Fahrenheit**
+**Display**: The integration always displays temperatures in your Home Assistant unit system (Settings → System → General). Home Assistant handles the conversion automatically.
 
-Simply select your preferred unit from the dropdown, and the integration will update the MSpa device accordingly.
+**Device**: The MSpa device's physical display unit can be managed in two ways:
+1. **Manual control**: Change the unit directly on the MSpa device or in the MSpa Link app
+2. **Automatic management**: Enable the "Track temperature unit" option (see below) to automatically set the device to match your HA system on power-up
 
-### Automatic Temperature Unit Tracking
+### Configuration Options
 
-To automatically set the temperature unit based on your Home Assistant unit system:
+Two separate options are available in **Settings** > **Devices & Services** > **MSpa** > **⚙️ Configure**:
 
-1. Go to **Settings** > **Devices & Services** > **MSpa**
-2. Click the **⚙️ cog wheel button** (Configure)
-3. Enable **"Track temperature unit based on Home Assistant unit system"**
-4. Click **Submit**
+#### 1. Track Temperature Unit (Optional)
+When enabled, the integration will automatically set the MSpa device's temperature unit to match your Home Assistant unit system whenever the device powers on:
+- HA uses Metric (Celsius) → MSpa device set to Celsius
+- HA uses Imperial (Fahrenheit) → MSpa device set to Fahrenheit
 
-When enabled, the integration will automatically set the MSpa's temperature unit to match your Home Assistant configuration whenever the device powers on.
+This eliminates the annoyance of the MSpa resetting to Fahrenheit after power outages.
+
+**Note**: This only affects the MSpa device's physical display. The integration always displays in your HA system unit regardless of this setting.
+
+#### 2. Restore Previous States After Power Outage (Optional)
+When enabled, the integration will restore device states after power cycles (see State Restoration section below).
 
 ### State Restoration After Power Outage
 
@@ -207,14 +212,13 @@ When enabled, the integration will:
 - Detect when the MSpa powers off and on (using the `is_online` field)
 - Save the current state before power loss
 - Automatically restore the following when power returns:
-  - Temperature unit (Celsius/Fahrenheit)
   - Target temperature
   - Heater state
   - Filter state
   - Ozone state
   - UVC state
 
-**Note**: The temperature unit is always restored first (if configured), followed by temperature settings, then other features. There are brief delays between restorations to ensure commands are processed correctly.
+**Note**: This option works independently of "Track temperature unit". You can enable one, both, or neither based on your preferences.
 
 ## Thermostat popup
 

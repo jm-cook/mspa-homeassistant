@@ -76,6 +76,10 @@ class MSpaSensor(MSpaSensorEntity):
         self._attr_state_class = SENSOR_TYPES[key][2]
         self._attr_device_class = SENSOR_TYPES[key][3]
         self._attr_device_info = self.device_info
+        # Water temperature is redundant with climate entity - make it diagnostic and disabled by default
+        if key == "water_temperature":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+            self._attr_entity_registry_enabled_default = False
 
     @property
     def native_value(self):

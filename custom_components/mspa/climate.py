@@ -4,7 +4,7 @@ from homeassistant.components.climate.const import (
     HVACMode,
     HVACAction,
 )
-from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES
 from .const import DOMAIN, TEMP_UNIT, MAX_TEMP, MIN_TEMP
 from .entity import MSpaClimateEntity
 
@@ -21,6 +21,7 @@ class MSpaClimate(MSpaClimateEntity):
     _attr_precision = PRECISION_HALVES
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
+    _attr_temperature_unit = TEMP_UNIT
 
     def __init__(self, coordinator):
         super().__init__(coordinator)
@@ -32,12 +33,6 @@ class MSpaClimate(MSpaClimateEntity):
                 | ClimateEntityFeature.TURN_ON
                 | ClimateEntityFeature.TURN_OFF
         )
-
-    @property
-    def temperature_unit(self):
-        """Return the temperature unit from device (0=Celsius, 1=Fahrenheit)."""
-        unit = self.coordinator.last_data.get("temperature_unit", 0)
-        return UnitOfTemperature.FAHRENHEIT if unit == 1 else UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self):

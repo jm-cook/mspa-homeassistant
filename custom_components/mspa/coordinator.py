@@ -319,10 +319,11 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             elif not self._last_is_online and current_is_online:
                 _LOGGER.info("MSpa power on detected")
                 
-                # Check if state restoration is enabled in config
-                restore_enabled = self.config_entry.options.get(CONF_RESTORE_STATE, False)
+                # Check config options
                 track_unit = self.config_entry.options.get(CONF_TRACK_TEMPERATURE_UNIT, False)
+                restore_enabled = self.config_entry.options.get(CONF_RESTORE_STATE, False)
                 
+                # Handle temperature unit tracking (independent of restore_state)
                 if track_unit:
                     # Set temperature unit based on HA unit system
                     ha_unit = self.hass.config.units.temperature_unit
@@ -330,14 +331,16 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
                     current_unit = data.get("temperature_unit", 0)
                     
                     if current_unit != desired_unit:
-                        _LOGGER.info(f"Auto-setting temperature unit to match HA system: {ha_unit}")
+                        _LOGGER.info(f"Setting MSpa temperature unit to match HA system: {ha_unit}")
                         await self.set_temperature_unit(desired_unit)
                 
-                if restore_enabled and self._saved_state:
-                    _LOGGER.info("Restoring previous state after power cycle")
-                    await self._restore_saved_state()
-                else:
-                    _LOGGER.debug("State restoration not enabled or no saved state available")
+                # Handle state restoration (independent of track_unit)
+                if restore_enabled:
+                    if self._saved_state:
+                        _LOGGER.info("Restoring previous state after power cycle")
+                        await self._restore_saved_state()
+                    else:
+                        _LOGGER.debug("No saved state available for restoration")
         
         # Update last is_online state
         self._last_is_online = current_is_online
@@ -345,10 +348,6 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
     async def _restore_saved_state(self) -> None:
         """Restore saved state after power cycle."""
         try:
-            # Restore temperature unit if saved and different from current
-            if "temperature_unit" in self._saved_state:
-                await self.set_temperature_unit(self._saved_state["temperature_unit"])
-            
             # Small delay to allow temperature unit to be set
             await asyncio.sleep(1)
             
