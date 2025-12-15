@@ -1,7 +1,7 @@
 # MSpa Custom Component Integration and Installation via HACS
 
 [![hacs][hacs-badge]][hacs-url]
-[![Validate][hacs-validation-badge]][hacs-validation-url]
+[![Validate with HACS][hacs-validation-badge]][hacs-validation-url]
 ![Maintenance][maintenance-badge]
 [![release][release-badge]][release-url]
 ![downloads][downloads-badge]
@@ -249,11 +249,11 @@ When enabled, the integration will:
 For issues or feature requests, please open an issue in this repository.
 
 <!-- Badge definitions -->
-[hacs-badge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
-[hacs-url]: https://hacs.xyz/
-[hacs-validation-badge]: https://github.com/jm-cook/mspa-homeassistant/workflows/Validate/badge.svg?style=for-the-badge
+[hacs-badge]: https://img.shields.io/badge/HACS-Custom-orange.svg
+[hacs-url]: https://github.com/jm-cook/mspa-homeassistant
+[hacs-validation-badge]: https://github.com/jm-cook/mspa-homeassistant/actions/workflows/validate.yaml/badge.svg
 [hacs-validation-url]: https://github.com/jm-cook/mspa-homeassistant/actions/workflows/validate.yaml
-[maintenance-badge]: https://img.shields.io/badge/Maintained-yes-green.svg?style=for-the-badge
-[release-badge]: https://img.shields.io/github/v/release/jm-cook/mspa-homeassistant?style=for-the-badge
+[maintenance-badge]: https://img.shields.io/maintenance/yes/2025.svg
+[release-badge]: https://img.shields.io/github/release/jm-cook/mspa-homeassistant.svg
 [release-url]: https://github.com/jm-cook/mspa-homeassistant/releases
-[downloads-badge]: https://img.shields.io/github/downloads/jm-cook/mspa-homeassistant/total?style=for-the-badge
+[downloads-badge]: https://img.shields.io/github/downloads/jm-cook/mspa-homeassistant/total
