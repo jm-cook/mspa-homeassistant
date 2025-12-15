@@ -10,6 +10,7 @@
     "@jm-cook"
   ],
   "documentation": "https://github.com/jm-cook/mspa-homeassistant",
+  "issue_tracker": "https://github.com/jm-cook/mspa-homeassistant/issues",
   "dependencies": [],
   "requirements": [],
   "iot_class": "local_polling",
