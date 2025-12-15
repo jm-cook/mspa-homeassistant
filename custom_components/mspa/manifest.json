@@ -1,19 +1,19 @@
 {
   "domain": "mspa",
-  "integration_type": "device",
   "name": "MSpa Hot Tub",
-  "config_flow": true,
-  "loggers": [
-    "custom_components.mspa"
-  ],
   "codeowners": [
     "@jm-cook"
   ],
-  "documentation": "https://github.com/jm-cook/mspa-homeassistant",
-  "issue_tracker": "https://github.com/jm-cook/mspa-homeassistant/issues",
+  "config_flow": true,
   "dependencies": [],
-  "requirements": [],
+  "documentation": "https://github.com/jm-cook/mspa-homeassistant",
+  "integration_type": "device",
   "iot_class": "local_polling",
-  "version": "2.0.0",
-  "single_config_entry": true
+  "issue_tracker": "https://github.com/jm-cook/mspa-homeassistant/issues",
+  "loggers": [
+    "custom_components.mspa"
+  ],
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "2.0.0"
 }
