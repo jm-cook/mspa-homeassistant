@@ -1,6 +1,7 @@
 # MSpa Custom Component Integration and Installation via HACS
 
 [![hacs][hacs-badge]][hacs-url]
+[![Validate][hacs-validation-badge]][hacs-validation-url]
 ![Maintenance][maintenance-badge]
 [![release][release-badge]][release-url]
 ![downloads][downloads-badge]
@@ -247,14 +248,12 @@ When enabled, the integration will:
 
 For issues or feature requests, please open an issue in this repository.
 
-<!-- Badges -->
+<!-- Badge definitions -->
 [hacs-badge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square
+[hacs-url]: https://hacs.xyz/
+[hacs-validation-badge]: https://github.com/jm-cook/mspa-homeassistant/workflows/Validate/badge.svg
+[hacs-validation-url]: https://github.com/jm-cook/mspa-homeassistant/actions/workflows/validate.yaml
+[maintenance-badge]: https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=flat-square
 [release-badge]: https://img.shields.io/github/v/release/jm-cook/mspa-homeassistant?style=flat-square
-## Limitations
-
-- It is not currently possible to determine which features your specific MSPA hot tub supports. If you find that some features, such as jet or ozone, do not work, it may be due to the specific model of your hot tub. You can disable the relevant entities in the Home Assistant UI.
-- The safety lock feature is not available in this integration. You can still operate the safety lock through the MSPA Link app.
-- Power consumption values are estimates based on typical specifications. For accurate energy tracking, calibrate the values based on your hot tub's specifications or measured power consumption.
-
-
-## Troubleshooting
+[release-url]: https://github.com/jm-cook/mspa-homeassistant/releases
+[downloads-badge]: https://img.shields.io/github/downloads/jm-cook/mspa-homeassistant/total?style=flat-square
