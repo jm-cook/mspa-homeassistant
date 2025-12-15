@@ -14,11 +14,6 @@
   "dependencies": [],
   "requirements": [],
   "iot_class": "local_polling",
-  "platforms": [
-    "switch",
-    "sensor",
-    "climate"
-  ],
   "version": "2.0.0",
   "single_config_entry": true
 }
