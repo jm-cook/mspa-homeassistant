@@ -25,9 +25,8 @@ This release addresses the MSpa hardware's tendency to reset to Fahrenheit and d
   - Eliminates need to manually reconfigure after power outages
 
 ### 🔧 Technical Improvements
-- **Static Climate Unit**: Climate entity always uses Celsius (API native format) with HA handling display conversion based on user's system preference
 - **Enhanced Coordinator**: Added power cycle detection and state restoration logic with is_online tracking
-- **API Extension**: Added `set_temperature_unit(unit)` method to mspa_api for temperature unit control
+- **API Extension**: Added `set_temperature_unit(unit)` method to mspa_api for device temperature unit control
 - **Independent Options**: Temperature unit tracking and state restoration work independently - use one, both, or neither
 
 ### 📝 Configuration Options
