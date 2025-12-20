@@ -77,18 +77,7 @@ class MSpaUVCSwitch(MSpaFeatureSwitch):
         coordinator.has_uvc_switch = True
 
 class MSpaBubbleSwitch(MSpaFeatureSwitch):
-    # Bubble switch for MSpa needs to be defined separately
-    # as it has a different service call structure
+    # Bubble switch for MSpa
     feature = "bubble"
     icon = "mdi:chart-bubble"
     name = "Bubble"
-    def __init__(self, coordinator):
-        super().__init__(coordinator)
-
-    async def async_turn_off(self, **kwargs):
-        _LOGGER.debug("Turning off %s", self.feature)
-        await self.coordinator.set_bubble(type("ServiceCall", (), {"data": {"state": "off"}}))
-
-    async def async_turn_off(self, **kwargs):
-        _LOGGER.debug("Turning off %s", self.feature)
-        await self.coordinator.set_bubble(type("ServiceCall", (), {"data": {"state": "off"}}))

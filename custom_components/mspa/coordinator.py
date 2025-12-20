@@ -139,7 +139,7 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
     FEATURE_API_MAP = {
         "heater": "set_heater_state",
         "filter": "set_filter_state",
-        # "bubble": "set_bubble_state",
+        "bubble": "set_bubble_state",
         "jet": "set_jet_state",
         "ozone": "set_ozone_state",
         "uvc": "set_uvc_state",
@@ -153,7 +153,12 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
                 raise ValueError("State must be 'on' or 'off'")
             numerical_state = 1 if state.lower() == "on" else 0
             api_method = getattr(self.api, self.FEATURE_API_MAP[feature])
-            await api_method(numerical_state)
+            
+            # Bubble state requires level parameter
+            if feature == "bubble":
+                await api_method(numerical_state, self._last_data.get("bubble_level", 1))
+            else:
+                await api_method(numerical_state)
             
             # Enable rapid polling to quickly detect the change
             self._enable_rapid_polling({feature: state})
