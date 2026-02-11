@@ -250,10 +250,10 @@ For issues or feature requests, please open an issue in this repository.
 
 <!-- Badge definitions -->
 [hacs-badge]: https://img.shields.io/badge/HACS-Custom-orange.svg
-[hacs-url]: https://github.com/jm-cook/mspa-homeassistant
-[hacs-validation-badge]: https://github.com/jm-cook/mspa-homeassistant/actions/workflows/validate.yaml/badge.svg
-[hacs-validation-url]: https://github.com/jm-cook/mspa-homeassistant/actions/workflows/validate.yaml
+[hacs-url]: https://github.com/DTekNO/mspa-homeassistant
+[hacs-validation-badge]: https://github.com/DTekNO/mspa-homeassistant/actions/workflows/validate.yaml/badge.svg
+[hacs-validation-url]: https://github.com/DTekNO/mspa-homeassistant/actions/workflows/validate.yaml
 [maintenance-badge]: https://img.shields.io/maintenance/yes/2025.svg
-[release-badge]: https://img.shields.io/github/release/jm-cook/mspa-homeassistant.svg
-[release-url]: https://github.com/jm-cook/mspa-homeassistant/releases
-[downloads-badge]: https://img.shields.io/github/downloads/jm-cook/mspa-homeassistant/total
+[release-badge]: https://img.shields.io/github/release/DTekNO/mspa-homeassistant.svg
+[release-url]: https://github.com/DTekNO/mspa-homeassistant/releases
+[downloads-badge]: https://img.shields.io/github/downloads/DTekNO/mspa-homeassistant/total

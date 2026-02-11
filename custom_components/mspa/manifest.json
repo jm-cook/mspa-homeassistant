@@ -2,14 +2,14 @@
   "domain": "mspa",
   "name": "MSpa Hot Tub",
   "codeowners": [
-    "@jm-cook"
+    "@DTekNOdev"
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/jm-cook/mspa-homeassistant",
+  "documentation": "https://github.com/DTekNO/mspa-homeassistant",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/jm-cook/mspa-homeassistant/issues",
+  "issue_tracker": "https://github.com/DTekNO/mspa-homeassistant/issues",
   "loggers": [
     "custom_components.mspa"
   ],
