@@ -12,6 +12,7 @@ CONF_PRODUCT_ID = "product_id"
 CONF_REGION = "region"
 CONF_TRACK_TEMPERATURE_UNIT = "track_temperature_unit"
 CONF_RESTORE_STATE = "restore_state"
+CONF_ALWAYS_ENFORCE_UNIT = "always_enforce_unit"
 
 # Region configuration
 # ROW = Rest of World (Europe, Africa, Middle East, Oceania, etc.)

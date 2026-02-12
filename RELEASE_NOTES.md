@@ -1,44 +1,87 @@
 # Release Notes
 
-## v2.1.0
+## v2.1.0 (February 2026)
 
-This release addresses the MSpa hardware's tendency to reset to Fahrenheit and default settings after power cycles, providing automatic temperature unit management and state restoration.
+This release significantly improves power cycle detection and state restoration, addressing the MSpa hardware's tendency to reset to Fahrenheit and default settings after power cycles.
+
+### 🔍 Enhanced Power Cycle Detection
+The integration now uses **multiple detection methods** to catch power cycles more reliably:
+
+1. **is_online Transition Detection** (original method)
+   - Detects when device goes offline and comes back online
+   - Works for extended power outages
+
+2. **Multi-Parameter Change Detection** (NEW)
+   - Detects when multiple settings change simultaneously
+   - Catches quick power cycles (few seconds) that might be missed by polling
+   - Looks for patterns like: heater OFF + filter OFF + temperature unit reset to F
+   - Helps detect brief power interruptions
+
+3. **Temperature Unit Reset Detection** (NEW)
+   - Specifically monitors for temperature unit reverting to Fahrenheit (default)
+   - Common indicator of a power reset
 
 ### 🌡️ Temperature Unit Management
 - **Automatic Unit Tracking**: Optional feature to set MSpa device temperature unit to match Home Assistant's system unit on power-up
   - Enable via integration configuration options
   - Works independently - no manual unit selector needed
   - Eliminates the annoyance of MSpa resetting to Fahrenheit after power outages
-  - Only affects MSpa device display, not HA display (HA always uses system preference)
+  
+- **Always Enforce Unit** (NEW): Optional feature to continuously enforce temperature unit
+  - Enable if your device frequently forgets temperature unit even without full power cycles
+  - Checks and corrects unit on every update (if mismatch detected)
+  - More aggressive than power-cycle-only tracking
 
 ### 🔄 State Restoration After Power Outage
-- **Power Cycle Detection**: Automatically detects when MSpa is powered off and on using the `is_online` field
 - **State Saving**: Captures current state before power loss:
   - Target temperature
   - Heater state
   - Filter state
   - Ozone state
   - UVC state
+  
 - **Automatic Restoration**: Optionally restores saved states when power returns
   - Enable via integration configuration options (independent of temperature unit tracking)
   - Includes delays between commands for reliable execution
+  - Detailed logging of each restoration step
   - Eliminates need to manually reconfigure after power outages
 
-### 🔧 Technical Improvements
-- **Enhanced Coordinator**: Added power cycle detection and state restoration logic with is_online tracking
-- **API Extension**: Added `set_temperature_unit(unit)` method to mspa_api for device temperature unit control
-- **Independent Options**: Temperature unit tracking and state restoration work independently - use one, both, or neither
+### 📊 Enhanced Logging & Diagnostics
+All power cycle and restoration events now include:
+- 🔌 Clear power ON/OFF detection messages with emoji indicators
+- 💾 State saving confirmations with values
+- ⚡ Detection method used (helps identify which method caught the power cycle)
+- 🌡️ Temperature unit changes with clear indication
+- ♨️ Individual restoration steps with success/failure status
+- ⚠️ Warnings for potential false positives
+- 💡 Tips for reporting issues
 
-### 📝 Configuration Options
-Two new optional settings available in integration configuration (⚙️ cog wheel):
-1. **Track temperature unit**: Automatically set MSpa device unit to match HA system unit on power-up
-2. **Restore previous states after power outage**: Automatically restore device states (heater, temperature, filter, etc.) when MSpa powers back on
+**Example log output:**
+```
+🔌 MSpa power OFF detected (is_online: True → False)
+💾 Saved state for restoration: {'heater': 'on', 'target_temperature': 38.0, ...}
+⚡ MSpa power ON detected via is_online transition (False → True)
+🔧 Config: track_temperature_unit=True, restore_state=True
+🌡️ Setting MSpa temperature unit to Celsius to match HA system
+♻️ Starting state restoration after power cycle
+🌡️ Restoring target temperature to 38.0°C
+♨️ Restoring heater to ON
+💨 Restoring filter to ON
+✅ State restoration completed: temperature=38.0°C, heater=ON, filter=ON
+```
+
+### 🔧 Configuration Options
+Three optional settings available in integration configuration (⚙️ cog wheel):
+
+1. **Track temperature unit**: Set MSpa device unit to match HA system unit on power-up
+2. **Always enforce unit** (NEW): Continuously enforce temperature unit on every update
+3. **Restore previous states after power outage**: Restore device states when MSpa powers back on
 
 **Upgrade Notes**: 
-- After upgrading, visit the integration configuration to enable the new features if desired
-- Both features are disabled by default to maintain backward compatibility
-- Temperature display always follows your HA system preference (Settings → System → General)
-- The options work independently - enable one, both, or neither based on your needs
+- After upgrading, visit Settings → Devices & Services → MSpa → Configure to enable new features
+- All features are disabled by default to maintain backward compatibility
+- "Always enforce unit" is independent from "Track temperature unit" - you can use either or both
+- Enhanced logging helps diagnose power cycle detection issues
 
 ---
 

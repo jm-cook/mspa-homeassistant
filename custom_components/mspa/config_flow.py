@@ -9,6 +9,7 @@ from .const import (
     CONF_REGION,
     CONF_TRACK_TEMPERATURE_UNIT,
     CONF_RESTORE_STATE,
+    CONF_ALWAYS_ENFORCE_UNIT,
     DEFAULT_REGION,
     REGIONS,
     COUNTRY_TO_REGION,
@@ -156,6 +157,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_TRACK_TEMPERATURE_UNIT,
                 default=self.config_entry.options.get(CONF_TRACK_TEMPERATURE_UNIT, False),
                 description="Set MSpa temperature unit to match Home Assistant system unit on power-up"
+            ): bool,
+            vol.Optional(
+                CONF_ALWAYS_ENFORCE_UNIT,
+                default=self.config_entry.options.get(CONF_ALWAYS_ENFORCE_UNIT, False),
+                description="Always enforce temperature unit on every update (use if device frequently forgets)"
             ): bool,
             vol.Optional(
                 CONF_RESTORE_STATE,

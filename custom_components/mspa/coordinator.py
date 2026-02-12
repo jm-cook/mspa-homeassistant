@@ -21,6 +21,7 @@ from .const import (
     RAPID_POLL_MAX_ATTEMPTS,
     CONF_TRACK_TEMPERATURE_UNIT,
     CONF_RESTORE_STATE,
+    CONF_ALWAYS_ENFORCE_UNIT,
 )
 
 from homeassistant.const import ATTR_STATE, ATTR_TEMPERATURE
@@ -72,6 +73,8 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
         self._last_heat_state = None  # Track heat state changes
         self._last_is_online = None  # Track power on/off transitions
         self._saved_state = {}  # Store state before power off for restoration
+        self._last_snapshot = {}  # Store last known state for change detection
+        self._power_cycle_detected = False  # Flag to track if we just detected a power cycle
 
 
     async def async_request_refresh(self) -> None:
@@ -124,6 +127,9 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
             
             # Check for power cycle and restore state if enabled
             await self._check_power_cycle(transformed_data)
+            
+            # Handle temperature unit enforcement (if always_enforce_unit is enabled)
+            await self._enforce_temperature_unit(transformed_data)
             
             # Check if we need to adjust polling based on heat state or pending changes
             await self._check_adaptive_polling(transformed_data)
@@ -301,14 +307,22 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"Rapid polling enabled, waiting for changes: {expected_changes}")
     
     async def _check_power_cycle(self, data: dict) -> None:
-        """Check for power cycle and restore state if enabled."""
-        current_is_online = data.get("is_online", True)
+        """Check for power cycle and restore state if enabled.
         
-        # Track is_online transitions
+        Uses multiple detection methods:
+        1. is_online transition from False to True
+        2. Multiple simultaneous parameter changes indicating a reset
+        3. Temperature unit reverting to default (typically F/1)
+        """
+        current_is_online = data.get("is_online", True)
+        power_cycle_detected = False
+        detection_method = ""
+        
+        # Method 1: Track is_online transitions
         if self._last_is_online is not None:
             # Detect power off transition (True → False)
             if self._last_is_online and not current_is_online:
-                _LOGGER.info("MSpa power off detected, saving state for restoration")
+                _LOGGER.info("🔌 MSpa power OFF detected (is_online: True → False)")
                 # Save current state before power off
                 self._saved_state = {
                     "heater": data.get("heater"),
@@ -318,34 +332,84 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
                     "ozone": data.get("ozone"),
                     "uvc": data.get("uvc"),
                 }
-                _LOGGER.debug(f"Saved state: {self._saved_state}")
+                _LOGGER.info(f"💾 Saved state for restoration: {self._saved_state}")
             
             # Detect power on transition (False → True)
             elif not self._last_is_online and current_is_online:
-                _LOGGER.info("MSpa power on detected")
+                power_cycle_detected = True
+                detection_method = "is_online transition (False → True)"
+                _LOGGER.info(f"⚡ MSpa power ON detected via {detection_method}")
+        
+        # Method 2: Detect multiple simultaneous changes suggesting a reset
+        # This helps catch quick power cycles that we might miss with is_online
+        if self._last_snapshot and not power_cycle_detected:
+            changes_detected = []
+            
+            # Check for key parameters reverting to defaults
+            if self._last_snapshot.get("temperature_unit") == 0 and data.get("temperature_unit") == 1:
+                changes_detected.append("temp_unit_reset_to_F")
+            
+            if self._last_snapshot.get("heater") == "on" and data.get("heater") == "off":
+                changes_detected.append("heater_off")
+            
+            if self._last_snapshot.get("filter") == "on" and data.get("filter") == "off":
+                changes_detected.append("filter_off")
+            
+            if self._last_snapshot.get("ozone") == "on" and data.get("ozone") == "off":
+                changes_detected.append("ozone_off")
+            
+            if self._last_snapshot.get("uvc") == "on" and data.get("uvc") == "off":
+                changes_detected.append("uvc_off")
+            
+            # If multiple things turned off simultaneously, it's likely a power cycle
+            if len(changes_detected) >= 2:
+                power_cycle_detected = True
+                detection_method = f"multiple simultaneous changes: {', '.join(changes_detected)}"
+                _LOGGER.warning(f"⚡ Possible power cycle detected via {detection_method}")
+                _LOGGER.info("💡 TIP: If this is a false positive, please report it with the changes detected")
+        
+        # Store current state as snapshot for next comparison
+        self._last_snapshot = {
+            "temperature_unit": data.get("temperature_unit"),
+            "heater": data.get("heater"),
+            "filter": data.get("filter"),
+            "ozone": data.get("ozone"),
+            "uvc": data.get("uvc"),
+            "target_temperature": data.get("target_temperature"),
+        }
+        
+        # Handle power cycle restoration
+        if power_cycle_detected:
+            self._power_cycle_detected = True
+            
+            # Check config options
+            track_unit = self.config_entry.options.get(CONF_TRACK_TEMPERATURE_UNIT, False)
+            restore_enabled = self.config_entry.options.get(CONF_RESTORE_STATE, False)
+            
+            _LOGGER.info(f"🔧 Config: track_temperature_unit={track_unit}, restore_state={restore_enabled}")
+            
+            # Handle temperature unit tracking (independent of restore_state)
+            if track_unit:
+                # Set temperature unit based on HA unit system
+                ha_unit = self.hass.config.units.temperature_unit
+                desired_unit = 1 if ha_unit == UnitOfTemperature.FAHRENHEIT else 0
+                current_unit = data.get("temperature_unit", 0)
                 
-                # Check config options
-                track_unit = self.config_entry.options.get(CONF_TRACK_TEMPERATURE_UNIT, False)
-                restore_enabled = self.config_entry.options.get(CONF_RESTORE_STATE, False)
-                
-                # Handle temperature unit tracking (independent of restore_state)
-                if track_unit:
-                    # Set temperature unit based on HA unit system
-                    ha_unit = self.hass.config.units.temperature_unit
-                    desired_unit = 1 if ha_unit == UnitOfTemperature.FAHRENHEIT else 0
-                    current_unit = data.get("temperature_unit", 0)
-                    
-                    if current_unit != desired_unit:
-                        _LOGGER.info(f"Setting MSpa temperature unit to match HA system: {ha_unit}")
+                if current_unit != desired_unit:
+                    unit_name = "Fahrenheit" if desired_unit == 1 else "Celsius"
+                    _LOGGER.info(f"🌡️ Setting MSpa temperature unit to {unit_name} to match HA system")
+                    try:
                         await self.set_temperature_unit(desired_unit)
-                
-                # Handle state restoration (independent of track_unit)
-                if restore_enabled:
-                    if self._saved_state:
-                        _LOGGER.info("Restoring previous state after power cycle")
-                        await self._restore_saved_state()
-                    else:
-                        _LOGGER.debug("No saved state available for restoration")
+                    except Exception as err:
+                        _LOGGER.error(f"❌ Failed to set temperature unit: {err}")
+            
+            # Handle state restoration (independent of track_unit)
+            if restore_enabled:
+                if self._saved_state:
+                    _LOGGER.info("♻️ Starting state restoration after power cycle")
+                    await self._restore_saved_state()
+                else:
+                    _LOGGER.warning("⚠️ No saved state available for restoration (device may have been off during HA restart)")
         
         # Update last is_online state
         self._last_is_online = current_is_online
@@ -353,39 +417,109 @@ class MSpaUpdateCoordinator(DataUpdateCoordinator):
     async def _restore_saved_state(self) -> None:
         """Restore saved state after power cycle."""
         try:
-            # Small delay to allow temperature unit to be set
-            await asyncio.sleep(1)
+            restored_items = []
+            failed_items = []
+            
+            # Small delay to allow temperature unit to be set first
+            await asyncio.sleep(2)
+            
+            _LOGGER.info(f"♻️ Restoring state from: {self._saved_state}")
             
             # Restore target temperature if saved
             if "target_temperature" in self._saved_state:
                 temp = self._saved_state["target_temperature"]
-                _LOGGER.info(f"Restoring target temperature to {temp}°C")
-                await self.api.set_temperature_setting(temp)
+                try:
+                    _LOGGER.info(f"🌡️ Restoring target temperature to {temp}°C")
+                    await self.api.set_temperature_setting(temp)
+                    restored_items.append(f"temperature={temp}°C")
+                    await asyncio.sleep(0.5)  # Small delay between commands
+                except Exception as err:
+                    _LOGGER.error(f"❌ Failed to restore temperature: {err}")
+                    failed_items.append(f"temperature: {err}")
             
             # Restore heater state if saved and was on
             if self._saved_state.get("heater") == "on":
-                _LOGGER.info("Restoring heater to ON")
-                await self.set_feature_state("heater", "on")
+                try:
+                    _LOGGER.info("♨️ Restoring heater to ON")
+                    await self.set_feature_state("heater", "on")
+                    restored_items.append("heater=ON")
+                    await asyncio.sleep(0.5)
+                except Exception as err:
+                    _LOGGER.error(f"❌ Failed to restore heater: {err}")
+                    failed_items.append(f"heater: {err}")
             
             # Restore filter state if saved and was on
             if self._saved_state.get("filter") == "on":
-                _LOGGER.info("Restoring filter to ON")
-                await self.set_feature_state("filter", "on")
+                try:
+                    _LOGGER.info("💨 Restoring filter to ON")
+                    await self.set_feature_state("filter", "on")
+                    restored_items.append("filter=ON")
+                    await asyncio.sleep(0.5)
+                except Exception as err:
+                    _LOGGER.error(f"❌ Failed to restore filter: {err}")
+                    failed_items.append(f"filter: {err}")
             
             # Restore ozone if saved and was on
             if self._saved_state.get("ozone") == "on":
-                _LOGGER.info("Restoring ozone to ON")
-                await self.set_feature_state("ozone", "on")
+                try:
+                    _LOGGER.info("🫧 Restoring ozone to ON")
+                    await self.set_feature_state("ozone", "on")
+                    restored_items.append("ozone=ON")
+                    await asyncio.sleep(0.5)
+                except Exception as err:
+                    _LOGGER.error(f"❌ Failed to restore ozone: {err}")
+                    failed_items.append(f"ozone: {err}")
             
             # Restore UVC if saved and was on
             if self._saved_state.get("uvc") == "on":
-                _LOGGER.info("Restoring UVC to ON")
-                await self.set_feature_state("uvc", "on")
+                try:
+                    _LOGGER.info("💡 Restoring UVC to ON")
+                    await self.set_feature_state("uvc", "on")
+                    restored_items.append("uvc=ON")
+                    await asyncio.sleep(0.5)
+                except Exception as err:
+                    _LOGGER.error(f"❌ Failed to restore UVC: {err}")
+                    failed_items.append(f"uvc: {err}")
             
-            _LOGGER.info("State restoration completed")
+            # Summary
+            if restored_items:
+                _LOGGER.info(f"✅ State restoration completed: {', '.join(restored_items)}")
+            if failed_items:
+                _LOGGER.error(f"❌ Failed to restore some items: {', '.join(failed_items)}")
+            if not restored_items and not failed_items:
+                _LOGGER.info("ℹ️ No items to restore (all were OFF)")
             
         except Exception as err:
-            _LOGGER.error(f"Failed to restore state: {err}")
+            _LOGGER.error(f"❌ State restoration failed with error: {err}", exc_info=True)
+    
+    async def _enforce_temperature_unit(self, data: dict) -> None:
+        """Enforce temperature unit to match HA system if always_enforce_unit is enabled.
+        
+        This is useful for devices that forget temperature unit setting even without a full power cycle.
+        """
+        always_enforce = self.config_entry.options.get(CONF_ALWAYS_ENFORCE_UNIT, False)
+        
+        if not always_enforce:
+            return
+        
+        # Don't enforce immediately after a detected power cycle (already handled there)
+        if self._power_cycle_detected:
+            self._power_cycle_detected = False
+            return
+        
+        # Get desired unit from HA system
+        ha_unit = self.hass.config.units.temperature_unit
+        desired_unit = 1 if ha_unit == UnitOfTemperature.FAHRENHEIT else 0
+        current_unit = data.get("temperature_unit", 0)
+        
+        # Only enforce if there's a mismatch
+        if current_unit != desired_unit:
+            unit_name = "Fahrenheit" if desired_unit == 1 else "Celsius"
+            _LOGGER.info(f"🌡️ Enforcing temperature unit: {unit_name} (always_enforce_unit enabled)")
+            try:
+                await self.set_temperature_unit(desired_unit)
+            except Exception as err:
+                _LOGGER.error(f"❌ Failed to enforce temperature unit: {err}")
     
     @property
     def last_data(self) -> dict:
