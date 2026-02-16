@@ -198,19 +198,19 @@ This eliminates the annoyance of the MSpa resetting to Fahrenheit after power ou
 **Note**: This only affects the MSpa device's physical display. The integration always displays in your HA system unit regardless of this setting.
 
 #### 2. Restore Previous States After Power Outage (Optional)
-When enabled, the integration will restore device states after power cycles (see State Restoration section below).
+When enabled, the integration will attempt to detect power cycles and restore device states (see State Restoration section below).
 
 ### State Restoration After Power Outage
 
-The MSpa hardware resets to default values (Fahrenheit, 40°C target temperature, all features off) when power cycled. To automatically restore your previous settings:
+The MSpa hardware resets to default values (Fahrenheit, 40°C target temperature, all features off) when power cycled. The integration can attempt to automatically restore your previous settings:
 
 1. Go to **Settings** > **Devices & Services** > **MSpa**
 2. Click the **⚙️ cog wheel button** (Configure)
 3. Enable **"Restore previous states after power outage"**
 4. Click **Submit**
 
-When enabled, the integration will:
-- Detect when the MSpa powers off and on (using the `is_online` field)
+When enabled, the integration will attempt to:
+- Detect when the MSpa powers off and on (using multiple detection methods)
 - Save the current state before power loss
 - Automatically restore the following when power returns:
   - Target temperature
@@ -219,7 +219,10 @@ When enabled, the integration will:
   - Ozone state
   - UVC state
 
-**Note**: This option works independently of "Track temperature unit". You can enable one, both, or neither based on your preferences.
+**Notes**: 
+- Power cycle detection uses multiple methods but may not catch every scenario (e.g., very brief power interruptions)
+- Check the Home Assistant logs for power cycle detection confirmations
+- This option works independently of "Track temperature unit". You can enable one, both, or neither based on your preferences.
 
 ## Thermostat popup
 
